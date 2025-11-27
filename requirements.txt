@@ -1,0 +1,11 @@
+requests
+beautifulsoup4
+lxml
+pydantic
+python-dotenv
+pandas
+psycopg2-binary
+fastapi
+uvicorn
+pydantic-settings
+streamlit

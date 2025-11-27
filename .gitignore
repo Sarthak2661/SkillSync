@@ -1,0 +1,27 @@
+# Virtual env
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# Environment variables
+.env
+*.env
+
+# Local data (do NOT upload raw or processed data)
+data/raw/
+data/processed/
+
+# Streamlit cache
+.streamlit/
+.streamlit_cache/
+
+# Logs
+*.log

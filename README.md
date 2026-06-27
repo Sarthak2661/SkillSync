@@ -156,8 +156,8 @@ docker-compose.yml    Local PostgreSQL service
 Clone the repository and open it in VS Code:
 
 ```powershell
-git clone https://github.com/<your-username>/SkillSync.git
-cd SkillSync
+git clone https://github.com/Sarthak2661/Skillsync.git
+cd Skillsync
 code .
 ```
 

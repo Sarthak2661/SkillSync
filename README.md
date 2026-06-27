@@ -1,10 +1,10 @@
-﻿# SkillSync: Job Market Intelligence Dashboard
+# SkillSync: Job Market Intelligence Dashboard
 
 SkillSync is a Python ETL project for comparing job-market skills with course and video resources.
 
 The project collects job postings and learning resources, extracts skills from the text, and turns the results into CSV outputs, a Streamlit dashboard, FastAPI endpoints, optional PostgreSQL tables, and Power BI-ready files.
 
-## Real-World Problem
+## Purpose
 
 People trying to enter data analyst, data engineering, or data science roles often see long lists of skills: SQL, Python, Power BI, Airflow, dbt, Snowflake, AWS, and many more. The hard part is not finding learning resources. The hard part is knowing which skills are actually showing up in job postings, whether enough learning material exists for those skills, and which certifications might be worth considering.
 
@@ -65,17 +65,6 @@ SkillSync treats that as a small market-intelligence problem:
 
 ![SkillSync FastAPI endpoints](docs/screenshots/FASTAPI%20endpoints.png)
 
-## Google XYZ Resume Framing
-
-Google's XYZ resume format is: **Accomplished X, as measured by Y, by doing Z.**
-
-For this project:
-
-> Built a job-market skill intelligence pipeline, identifying 42 tracked skills across 156 job postings and 41 learning resources, by scraping multi-source job/course data, extracting skills with Python, validating data quality, and serving results through Streamlit, FastAPI, PostgreSQL, and Power BI exports.
-
-Shorter version:
-
-> Built a scheduled ETL dashboard for labor-market skill analysis, tracking 42 skills and historical demand snapshots, by ingesting job/course data, applying quality checks, and publishing analytics through FastAPI, Streamlit, PostgreSQL, and Power BI.
 
 ## Architecture
 
@@ -162,337 +151,155 @@ export_powerbi.py     Power BI CSV model export
 docker-compose.yml    Local PostgreSQL service
 ```
 
-## Quickstart
+## Local Setup
+
+Clone the repository and open it in VS Code:
+
+```powershell
+git clone https://github.com/<your-username>/SkillSync.git
+cd SkillSync
+code .
+```
+
+Create a virtual environment and install the dependencies:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
+```
+
+Run the pipeline once:
+
+```powershell
 python pipeline.py
 ```
 
-By default, the project uses sample/local sources so it can run without extra setup. Use seed mode if you only want a quick smoke test.
-
-Recommended local run:
+Export the Power BI CSV model:
 
 ```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="curated"
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="hybrid"
-$env:MARKET_INTEL_COURSE_SOURCE_LIMIT="50"
-python pipeline.py
 python export_powerbi.py
 ```
 
-This run is better for screenshots because the sample jobs have full data-role descriptions. The fake-jobs site is still useful for testing the scraper, but most of those jobs are not data roles.
-
-## Job Source Modes
-
-Run the sample data-role job source:
+Run a quick check that the latest output is readable:
 
 ```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="curated"
-python pipeline.py
+python scripts\smoke_check.py
 ```
 
-Run the small offline seed source:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="seed"
-python pipeline.py
-```
-
-Run the live job scraper:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="realpython"
-python pipeline.py
-```
-
-Run the Y Combinator Jobs scraper:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="yc"
-python pipeline.py
-```
-
-Run all job sources:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="all"
-python pipeline.py
-```
-
-Run the hybrid course connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="hybrid"
-python pipeline.py
-```
-
-Run the open-course connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="open_catalog"
-python pipeline.py
-```
-
-Run the vendor documentation course connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="vendor_docs"
-python pipeline.py
-```
-
-Run the university/open learning connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="university_open"
-python pipeline.py
-```
-
-Run the YouTube learning-video connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="youtube"
-$env:MARKET_INTEL_YOUTUBE_API_KEY="your_api_key_optional"
-python pipeline.py
-```
-
-If no YouTube API key is set, the connector uses local fallback records so the project still runs after cloning.
-
-Run the live Microsoft Learn course connector:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="microsoft"
-python pipeline.py
-```
-
-Run all course sources:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="all"
-python pipeline.py
-```
-
-Run the full source mix:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="all"
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="all"
-$env:MARKET_INTEL_COURSE_SOURCE_LIMIT="25"
-python pipeline.py
-python export_powerbi.py
-```
-
-Run sample jobs with live/hybrid courses:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="curated"
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="hybrid"
-python pipeline.py
-```
-
-Run Microsoft Learn plus the open-course catalog:
-
-```powershell
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="microsoft_open"
-$env:MARKET_INTEL_COURSE_SOURCE_LIMIT="50"
-python pipeline.py
-```
-
-Run the live job scraper with Microsoft Learn:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="realpython"
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="microsoft"
-$env:MARKET_INTEL_COURSE_SOURCE_LIMIT="50"
-python pipeline.py
-```
-
-## Scheduling
-
-Run the scheduler locally:
-
-```powershell
-$env:MARKET_INTEL_JOB_SOURCE_MODE="curated"
-$env:MARKET_INTEL_COURSE_SOURCE_MODE="microsoft"
-$env:MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES="60"
-python scheduler.py
-```
-
-The scheduler writes logs to `logs/scheduler.log`.
-
-For Windows Task Scheduler, create a task with:
-
-- Program: `C:\path\to\repo\.venv\Scripts\python.exe`
-- Arguments: `pipeline.py`
-- Start in: `C:\path\to\repo`
-- Trigger: hourly, daily, or your preferred cadence
-
-For cron on macOS/Linux:
-
-```cron
-0 * * * * cd /path/to/repo && /path/to/repo/.venv/bin/python pipeline.py >> logs/cron.log 2>&1
-```
-
-## PostgreSQL Warehouse
-
-Start a local PostgreSQL database:
-
-```powershell
-docker compose up -d postgres
-```
-
-Enable warehouse loading:
-
-```powershell
-$env:MARKET_INTEL_DB_URL="postgresql://postgres:postgres@localhost:5432/job_market_intel"
-$env:MARKET_INTEL_LOAD_TO_POSTGRES="true"
-python pipeline.py
-```
-
-Warehouse tables are created under the `market_intel` schema:
-
-- `market_intel.job_postings`
-- `market_intel.course_listings`
-- `market_intel.skill_gap_summary`
-- `market_intel.skill_trend_history`
-- `market_intel.certification_recommendations`
-- `market_intel.quality_checks`
-
-Each table includes `run_id`, so repeated runs append snapshots instead of replacing historical results.
-
-## Testing
-
-Run the parser and skill-extraction tests:
-
-```powershell
-python -m unittest discover -s tests
-```
-
-Run a quick output check after the pipeline:
-
-```powershell
-python scripts/smoke_check.py
-```
-
-The test suite currently checks:
-
-- RealPython job-card parsing.
-- Y Combinator job-card parsing, including salary and location extraction.
-- YouTube fallback learning-source records.
-- Core skill extraction for Python, SQL, ETL, Airflow, dbt, Power BI, and Data Quality.
-
-To verify PostgreSQL loading, install Docker Desktop, then run:
-
-```powershell
-docker compose up -d postgres
-$env:MARKET_INTEL_LOAD_TO_POSTGRES="true"
-$env:MARKET_INTEL_DB_URL="postgresql://postgres:postgres@localhost:5432/job_market_intel"
-python pipeline.py
-```
-
-## FastAPI
-
-Start the API:
-
-```powershell
-uvicorn api.main:app --reload
-```
-
-Or use the helper script on Windows:
-
-```powershell
-.\scripts\run_api.ps1
-```
-
-If PowerShell blocks scripts on your machine, use:
-
-```powershell
-.\scripts\run_api.cmd
-```
-
-Open:
-
-- API root: `http://127.0.0.1:8000/`
-- API docs: `http://127.0.0.1:8000/docs`
-
-Useful endpoints:
-
-- `/health`
-- `/runs/latest`
-- `/kpis`
-- `/skill-gaps`
-- `/skill-trends`
-- `/skills/{skill}`
-- `/jobs`
-- `/courses`
-- `/certifications`
-- `/quality`
-- `/sources`
-- `/datasets`
-
-Example:
-
-```powershell
-Invoke-RestMethod "http://127.0.0.1:8000/kpis"
-Invoke-RestMethod "http://127.0.0.1:8000/skills/Python"
-Invoke-RestMethod "http://127.0.0.1:8000/skill-trends?skill=Python"
-```
-
-## Streamlit Dashboard
-
-```powershell
-streamlit run dashboard/app.py
-```
-
-Or use the helper script on Windows:
+Start the dashboard:
 
 ```powershell
 .\scripts\run_dashboard.ps1
 ```
 
-If PowerShell blocks scripts on your machine, use:
+Open `http://127.0.0.1:8501/`.
+
+Start the API in a second terminal:
 
 ```powershell
-.\scripts\run_dashboard.cmd
+.\scripts\run_api.ps1
 ```
 
-Dashboard pages:
+Open `http://127.0.0.1:8000/docs`.
 
-- `Overview`: KPIs, opportunity ranking, demand vs course supply, and target roles.
-- `Trend Lab`: historical skill demand lines, run history, and weekly trend view after 7+ days of snapshots.
-- `Skills Explorer`: skill-level drilldown into jobs, courses, and score inputs.
-- `Learning & Certification Path`: course/video resources plus free and paid certification recommendations by skill.
-- `Logs & Quality`: timestamped pipeline runs, scheduler log tail, and data quality checks.
-- `Guide`: dashboard interpretation and data sources.
+If PowerShell blocks scripts on your machine, use the `.cmd` files in `scripts/` instead.
+
+## Optional PostgreSQL Loading
+
+The project runs without PostgreSQL by default. To load pipeline outputs into a local PostgreSQL warehouse, update `.env`:
+
+```text
+MARKET_INTEL_LOAD_TO_POSTGRES=true
+MARKET_INTEL_DB_URL=postgresql://postgres:<your-password>@localhost:5432/job_market_intel
+```
+
+Then run:
+
+```powershell
+python pipeline.py
+```
+
+The loader creates tables under the `market_intel` schema.
+
+If you prefer Docker, start the included PostgreSQL service first:
+
+```powershell
+docker compose up -d postgres
+```
+
+The Docker database uses the credentials in `docker-compose.yml`.
+
+## Source Modes
+
+The default `.env.example` runs the full source mix. For a faster local demo, change these values in `.env`:
+
+```text
+MARKET_INTEL_JOB_SOURCE_MODE=curated
+MARKET_INTEL_COURSE_SOURCE_MODE=hybrid
+MARKET_INTEL_COURSE_SOURCE_LIMIT=50
+```
+
+Useful modes:
+
+| Setting | Options |
+| --- | --- |
+| `MARKET_INTEL_JOB_SOURCE_MODE` | `curated`, `seed`, `realpython`, `yc`, `all` |
+| `MARKET_INTEL_COURSE_SOURCE_MODE` | `hybrid`, `open_catalog`, `vendor_docs`, `university_open`, `youtube`, `microsoft`, `microsoft_open`, `all` |
+
+More detailed local run notes are in [docs/runbook.md](docs/runbook.md).
+
+## Scheduling
+
+Use `scheduler.py` for repeated pipeline runs. The interval is controlled by `MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES` in `.env`, and logs are written to `logs/scheduler.log`.
+
+For production-style scheduling, run `pipeline.py` through Windows Task Scheduler, cron, or another scheduler of your choice.
+
+## Testing
+
+Run the test suite and smoke check before pushing changes:
+
+```powershell
+python -m unittest discover -s tests
+python scripts\smoke_check.py
+```
+
+The tests cover parser behavior, YouTube fallback records, and core skill extraction.
+
+## FastAPI
+
+Start the API with:
+
+```powershell
+.\scripts\run_api.ps1
+```
+
+Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
+
+Main endpoints include `/health`, `/kpis`, `/skill-gaps`, `/skill-trends`, `/jobs`, `/courses`, `/certifications`, `/quality`, and `/sources`.
+
+## Streamlit Dashboard
+
+Start the dashboard with:
+
+```powershell
+.\scripts\run_dashboard.ps1
+```
+
+Open `http://127.0.0.1:8501/`.
+
+Dashboard pages include Overview, Trend Lab, Skills Explorer, Learning & Certification Path, Logs & Quality, and Guide.
 
 ## Power BI Dashboard
 
-Generate Power BI-ready tables:
-
-```powershell
-python export_powerbi.py
-```
-
-Import the CSV files from `powerbi/export/` into Power BI Desktop.
+Run `python export_powerbi.py`, then import the CSV files from `powerbi/export/` into Power BI Desktop.
 
 Dashboard build instructions, relationships, and DAX measures are documented in [powerbi/README.md](powerbi/README.md).
 
 ## Data Quality Checks
 
-The quality layer produces a structured `quality_summary` table with:
-
-- `dataset`
-- `check_name`
-- `status`
-- `severity`
-- `records_checked`
-- `failed_count`
-- `message`
-
-These checks catch common issues before the dashboard is used. For example, the pipeline flags low sample sizes, unexpected source domains, stale job postings, and rows where no skills were extracted.
+The quality layer flags common issues before the dashboard is used, including low sample sizes, unexpected source domains, stale job postings, salary anomalies, duplicate records, and rows where no skills were extracted.
 
 ## Known Limitations
 
@@ -587,15 +394,6 @@ The dashboard also has a learning page:
 
 This page is meant to answer: "If this skill looks useful, what should I study or certify in next?"
 
-## Resume Notes
-
-Example bullet:
-
-> Built a scheduled Python ETL pipeline that ingests job postings and course listings, extracts technical skills, validates data quality, loads analytics-ready outputs into PostgreSQL, and powers FastAPI, Streamlit, and Power BI dashboards for skill-gap analysis.
-
-Version that mentions historical snapshots:
-
-> Built a scheduled labor-market intelligence pipeline that captures historical snapshots of job and course data, tracks skill demand trends over time, computes a Skill Opportunity Index, validates data quality, and serves analytics through PostgreSQL, FastAPI, Streamlit, and Power BI.
 
 ## Next Improvements
 

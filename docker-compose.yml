@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: market-intel-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: job_market_intel
+    ports:
+      - "5432:5432"
+    volumes:
+      - market_intel_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d job_market_intel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  market_intel_pgdata:

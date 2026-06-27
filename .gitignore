@@ -1,5 +1,6 @@
 # Virtual env
 .venv/
+.codex-run-venv/
 env/
 venv/
 
@@ -18,10 +19,15 @@ __pycache__/
 # Local data (do NOT upload raw or processed data)
 data/raw/
 data/processed/
+!data/
+!data/sample/
+!data/sample/**
+powerbi/export/
 
 # Streamlit cache
 .streamlit/
 .streamlit_cache/
 
 # Logs
+logs/
 *.log

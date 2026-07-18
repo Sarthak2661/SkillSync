@@ -1,27 +1,37 @@
 # Source Notes
 
-This project mixes live sources with local/sample sources. That is deliberate.
+SkillSync uses official APIs for current records and curated local data for repeatable demos and tests. Parser-only sources are labeled separately so they are not mistaken for market evidence.
 
 ## Job Sources
 
-| Source | Type | Notes |
-| --- | --- | --- |
-| `data/sample/curated_data_jobs.csv` | local CSV | Best source for clean dashboard screenshots. |
-| Y Combinator Jobs | live HTML | Good for startup hiring signals, but broad. |
-| RealPython Fake Jobs | live HTML | Good scraper test page, but not a real job market source. |
-| Startup Data Jobs | local Python list | Small repeatable source for data startup roles. |
-| Enterprise Analytics Jobs | local Python list | Small repeatable source for BI/cloud/governance roles. |
+| Source | Type | Confidence | Notes |
+| --- | --- | --- | --- |
+| Adzuna Jobs API | official API | `live_verified` | Real job API. Requires `MARKET_INTEL_ADZUNA_APP_ID` and `MARKET_INTEL_ADZUNA_APP_KEY`. Skips cleanly when keys are missing. |
+| Arbeitnow Job API | public API | `live_verified` | Free no-key JSON API. Low-friction source for real postings. |
+| Remotive Jobs API | public API | `live_verified` | Free remote-job JSON API. Useful for remote data/software roles. |
+| `data/sample/curated_data_jobs.csv` | local CSV | `curated_demo` | Best source for clean dashboard screenshots and repeatable data-role descriptions. |
+| Startup Data Jobs | local Python list | `curated_demo` | Small repeatable source for data startup roles. |
+| Enterprise Analytics Jobs | local Python list | `curated_demo` | Small repeatable source for BI/cloud/governance roles. |
+| Y Combinator Jobs | HTML scraper | `live_broad` | Optional legacy source. Real postings, but broad roles and more fragile than APIs. |
+| RealPython Fake Jobs | HTML scraper | `test_source` | Good parser test page, but not a real job market source. |
 
 ## Course Sources
 
-| Source | Type | Notes |
-| --- | --- | --- |
-| YouTube Learning | API or fallback | Uses YouTube Data API when a key is set; otherwise local fallback rows. |
-| Microsoft Learn | public API | Good live source for Microsoft/cloud learning resources. |
-| Open Course Catalog | local Python list | Free/open learning resources. |
-| Vendor Docs Catalog | local Python list | Tool documentation and vendor training links. |
-| University Open Catalog | local Python list | Statistics, ML, and visualization foundations. |
+| Source | Type | Confidence | Notes |
+| --- | --- | --- | --- |
+| YouTube Learning | API or fallback | `fallback_learning` | Uses YouTube Data API when a key is set; otherwise local fallback rows. |
+| Microsoft Learn | public API | `live_verified` | Good live source for Microsoft/cloud learning resources. |
+| Open Course Catalog | local Python list | `curated_demo` | Free/open learning resources. |
+| Vendor Docs Catalog | local Python list | `curated_demo` | Tool documentation and vendor training links. |
+| University Open Catalog | local Python list | `curated_demo` | Statistics, ML, and visualization foundations. |
 
+## Reference Sources
+
+| Source | Type | Confidence | Notes |
+| --- | --- | --- | --- |
+| O*NET Online / O*NET-SOC | official occupational reference | `live_verified` | Used to ground skill taxonomy, SOC occupation mappings, wage medians, growth outlook, projected openings, and reference URLs. |
 ## Scraping Notes
+
+The default `all` job mode now uses official APIs plus curated local job records. YC and RealPython remain available as optional modes for comparison and parser testing, but they are not the preferred source path.
 
 Some large job and learning platforms restrict scraping or require authentication. For those, I would rather use an official API, public dataset, or manual export than scrape pages against their terms.

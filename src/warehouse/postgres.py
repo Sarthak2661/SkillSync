@@ -20,6 +20,7 @@ DDL_STATEMENTS = (
     CREATE TABLE IF NOT EXISTS {SCHEMA_NAME}.job_postings (
         run_id TEXT NOT NULL,
         source_name TEXT,
+        source_confidence TEXT,
         external_id TEXT,
         title TEXT,
         company TEXT,
@@ -43,6 +44,7 @@ DDL_STATEMENTS = (
     CREATE TABLE IF NOT EXISTS {SCHEMA_NAME}.course_listings (
         run_id TEXT NOT NULL,
         source_name TEXT,
+        source_confidence TEXT,
         external_id TEXT,
         title TEXT,
         platform TEXT,
@@ -82,11 +84,20 @@ DDL_STATEMENTS = (
         opportunity_label TEXT,
         market_direction TEXT,
         target_job_roles TEXT,
+        taxonomy_source TEXT,
+        onet_soc_codes TEXT,
+        onet_occupations TEXT,
+        onet_wage_median_annual NUMERIC,
+        onet_growth_outlook TEXT,
+        onet_projected_openings NUMERIC,
+        onet_reference_url TEXT,
         status TEXT,
         loaded_at TIMESTAMPTZ DEFAULT NOW(),
         PRIMARY KEY (run_id, skill)
     );
     """,
+    f"ALTER TABLE {SCHEMA_NAME}.job_postings ADD COLUMN IF NOT EXISTS source_confidence TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.course_listings ADD COLUMN IF NOT EXISTS source_confidence TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS demand_score INT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS growth_score INT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS salary_premium_score INT;",
@@ -96,6 +107,13 @@ DDL_STATEMENTS = (
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS opportunity_label TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS market_direction TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS target_job_roles TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS taxonomy_source TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_soc_codes TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_occupations TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_wage_median_annual NUMERIC;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_growth_outlook TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_projected_openings NUMERIC;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS onet_reference_url TEXT;",
     f"""
     CREATE TABLE IF NOT EXISTS {SCHEMA_NAME}.quality_checks (
         run_id TEXT NOT NULL,

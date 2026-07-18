@@ -5,8 +5,21 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
+from src.analytics.source_confidence import SOURCE_CONFIDENCE_LABELS
 
-TRUSTED_JOB_DOMAINS = {"example.com", "realpython.github.io", "www.ycombinator.com", "ycombinator.com"}
+
+TRUSTED_JOB_DOMAINS = {
+    "adzuna.com",
+    "arbeitnow.com",
+    "example.com",
+    "realpython.github.io",
+    "remotive.com",
+    "www.adzuna.com",
+    "www.arbeitnow.com",
+    "www.remotive.com",
+    "www.ycombinator.com",
+    "ycombinator.com",
+}
 TRUSTED_COURSE_DOMAINS = {
     "airflow.apache.org",
     "coursera.org",
@@ -40,6 +53,8 @@ def summarize_quality(
         _empty_skills(courses_df, "courses"),
         _trusted_url_domains(jobs_df, "jobs", TRUSTED_JOB_DOMAINS),
         _trusted_url_domains(courses_df, "courses", TRUSTED_COURSE_DOMAINS),
+        _source_confidence_present(jobs_df, "jobs"),
+        _source_confidence_present(courses_df, "courses"),
         _posting_freshness(jobs_df),
         _course_freshness(courses_df),
         _sample_size_check(jobs_df, courses_df),
@@ -147,6 +162,24 @@ def _trusted_url_domains(df: pd.DataFrame, dataset: str, trusted_domains: set[st
     )
 
 
+def _source_confidence_present(df: pd.DataFrame, dataset: str) -> dict[str, object]:
+    if df.empty:
+        return _result(dataset, "source_confidence_labels", "warning", "medium", 0, 0, "Dataset is empty.")
+    if "source_confidence" not in df:
+        return _result(dataset, "source_confidence_labels", "warning", "medium", len(df), len(df), "No source confidence labels found.")
+
+    valid_labels = set(SOURCE_CONFIDENCE_LABELS)
+    invalid_count = int((~df["source_confidence"].fillna("").isin(valid_labels)).sum())
+    status = "pass" if invalid_count == 0 else "warning"
+    return _result(
+        dataset,
+        "source_confidence_labels",
+        status,
+        "medium",
+        len(df),
+        invalid_count,
+        f"{invalid_count} records have source confidence labels outside: {', '.join(SOURCE_CONFIDENCE_LABELS)}.",
+    )
 def _posting_freshness(df: pd.DataFrame) -> dict[str, object]:
     if df.empty or "posted_at" not in df:
         return _result("jobs", "posting_date_freshness", "warning", "low", 0, 0, "No posting dates available.")

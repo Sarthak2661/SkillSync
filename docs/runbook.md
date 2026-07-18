@@ -1,13 +1,33 @@
-﻿# Local Runbook
+# Local Runbook
 
 This is the short version I use when I want to run the project from a fresh terminal and check that the outputs still look right.
 
+## Docker First Run
+
+Start Docker Desktop, then run this from the project folder:
+
+```powershell
+docker compose up --build
+```
+
+This starts PostgreSQL, runs the pipeline once, exports Power BI CSV files, starts FastAPI, and starts the Streamlit dashboard.
+
+Open:
+
+- FastAPI docs: `http://127.0.0.1:8000/docs`
+- Dashboard: `http://127.0.0.1:8501`
+
+Manual steps you may still need:
+
+- Start Docker Desktop before running Compose.
+- Add Adzuna or YouTube API keys to `.env` only if you want those optional live sources.
+- If ports `5434`, `8000`, or `8501` are already busy, stop the conflicting local service or change the port mapping in `docker-compose.yml`.
 ## First Run
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 copy .env.example .env
 python pipeline.py
 python export_powerbi.py
@@ -85,12 +105,48 @@ The project can run without PostgreSQL, but this is the check I use before sayin
 ```powershell
 docker compose up -d postgres
 $env:MARKET_INTEL_LOAD_TO_POSTGRES="true"
-$env:MARKET_INTEL_DB_URL="postgresql://postgres:postgres@localhost:5432/job_market_intel"
+$env:MARKET_INTEL_DB_URL="postgresql://postgres:<your-password>@localhost:5432/job_market_intel"
 python pipeline.py
 ```
 
 After the run, the tables should exist under the `market_intel` schema.
 
+## Airflow Orchestration With Docker
+
+`scheduler.py` is kept as a simple local fallback. For a more realistic portfolio run, use the Airflow DAG.
+
+Start PostgreSQL, Airflow metadata DB, Airflow webserver, and Airflow scheduler:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.airflow.yml --profile airflow up --build
+```
+
+Open Airflow at `http://localhost:8080`.
+
+Default login:
+
+```text
+username: admin
+password: admin
+```
+
+Enable or trigger the DAG named `skillsync_market_intel_pipeline`.
+
+The DAG tasks are:
+
+1. `ingest` - collects job and course records and writes raw JSONL files.
+2. `transform` - creates cleaned jobs, courses, skill summary, trend history, and certification files.
+3. `quality_checks` - writes the data quality summary.
+4. `export_powerbi_files` - refreshes the CSV files in `powerbi/export/`.
+5. `optional_postgresql_load` - loads warehouse tables only when `MARKET_INTEL_LOAD_TO_POSTGRES=true`.
+
+For PostgreSQL loading inside Docker, use this environment value:
+
+```text
+MARKET_INTEL_LOAD_TO_POSTGRES=true
+```
+
+The Airflow compose file points the warehouse URL at the Docker `postgres` service automatically.
 ## Quick QA Checklist
 
 - `python -m unittest discover -s tests`

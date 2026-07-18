@@ -1,13 +1,5 @@
 from __future__ import annotations
 
-from src.etl.io import run_timestamp, save_dataframe, save_raw_records
-from src.analytics.certifications import build_certification_recommendations
-from src.etl.transform import (
-    build_skill_gap_summary,
-    build_skill_trend_history,
-    normalize_course_listings,
-    normalize_job_postings,
-)
 from src.config.settings import settings
 from src.ingestion.course_sources import (
     CompositeCourseSource,
@@ -19,66 +11,65 @@ from src.ingestion.course_sources import (
 )
 from src.ingestion.curated_job_source import CuratedDataJobsSource
 from src.ingestion.job_sources import (
+    AdzunaJobsSource,
+    ArbeitnowJobsSource,
     CompositeJobSource,
     EnterpriseAnalyticsJobsSource,
     RealPythonFakeJobsSource,
+    RemotiveJobsSource,
     StartupDataJobsSource,
     YCombinatorJobsSource,
 )
 from src.ingestion.seed_sources import SeedCourseListingSource, SeedJobPostingSource
-from src.quality.checks import summarize_quality
-from src.warehouse.postgres import load_pipeline_outputs
+from src.orchestration.pipeline_steps import (
+    ingest_sources,
+    load_postgres_if_enabled,
+    run_quality_checks,
+    transform_raw_records,
+    write_run_log_from_paths,
+)
 
 
 def run_pipeline() -> dict[str, str]:
-    run_id = run_timestamp()
-
-    job_records = get_job_source().fetch()
-    course_records = get_course_source().fetch()
-
-    raw_jobs_path = save_raw_records(job_records, "job_postings_raw", run_id)
-    raw_courses_path = save_raw_records(course_records, "course_listings_raw", run_id)
-
-    jobs_df = normalize_job_postings(job_records)
-    courses_df = normalize_course_listings(course_records)
-    skill_gap_df = build_skill_gap_summary(jobs_df, courses_df)
-    skill_trend_df = build_skill_trend_history(jobs_df, courses_df, run_id)
-    certification_df = build_certification_recommendations(skill_gap_df)
-    quality_df = summarize_quality(jobs_df, courses_df, skill_gap_df)
-
-    jobs_path = save_dataframe(jobs_df, "job_postings_clean", run_id)
-    courses_path = save_dataframe(courses_df, "course_listings_clean", run_id)
-    skill_gap_path = save_dataframe(skill_gap_df, "skill_gap_summary", run_id)
-    skill_trend_path = save_dataframe(skill_trend_df, "skill_trend_history", run_id)
-    certification_path = save_dataframe(certification_df, "certification_recommendations", run_id)
-    quality_path = save_dataframe(quality_df, "quality_summary", run_id)
-
-    warehouse_status = "skipped"
-    if settings.load_to_postgres:
-        load_pipeline_outputs(
-            run_id=run_id,
-            jobs_df=jobs_df,
-            courses_df=courses_df,
-            skill_gap_df=skill_gap_df,
-            skill_trend_df=skill_trend_df,
-            certification_df=certification_df,
-            quality_df=quality_df,
-        )
-        warehouse_status = "loaded"
+    ingested = ingest_sources(get_job_source(), get_course_source())
+    run_id = ingested["run_id"]
+    transformed = transform_raw_records(ingested["raw_jobs"], ingested["raw_courses"], run_id)
+    quality = run_quality_checks(
+        transformed["clean_jobs"],
+        transformed["clean_courses"],
+        transformed["skill_gap_summary"],
+        run_id,
+    )
+    warehouse_status = load_postgres_if_enabled(
+        clean_jobs_path=transformed["clean_jobs"],
+        clean_courses_path=transformed["clean_courses"],
+        skill_gap_path=transformed["skill_gap_summary"],
+        skill_trend_path=transformed["skill_trend_history"],
+        certification_path=transformed["certification_recommendations"],
+        quality_path=quality["quality_summary"],
+        run_id=run_id,
+    )
 
     outputs = {
         "run_id": run_id,
-        "raw_jobs": str(raw_jobs_path),
-        "raw_courses": str(raw_courses_path),
-        "clean_jobs": str(jobs_path),
-        "clean_courses": str(courses_path),
-        "skill_gap_summary": str(skill_gap_path),
-        "skill_trend_history": str(skill_trend_path),
-        "certification_recommendations": str(certification_path),
-        "quality_summary": str(quality_path),
+        "raw_jobs": ingested["raw_jobs"],
+        "raw_courses": ingested["raw_courses"],
+        "clean_jobs": transformed["clean_jobs"],
+        "clean_courses": transformed["clean_courses"],
+        "skill_gap_summary": transformed["skill_gap_summary"],
+        "skill_trend_history": transformed["skill_trend_history"],
+        "certification_recommendations": transformed["certification_recommendations"],
+        "quality_summary": quality["quality_summary"],
         "postgres": warehouse_status,
     }
-    write_run_log(run_id, jobs_df, courses_df, skill_gap_df, skill_trend_df, warehouse_status)
+    write_run_log_from_paths(
+        run_id=run_id,
+        clean_jobs_path=transformed["clean_jobs"],
+        clean_courses_path=transformed["clean_courses"],
+        skill_gap_path=transformed["skill_gap_summary"],
+        skill_trend_path=transformed["skill_trend_history"],
+        warehouse_status=warehouse_status,
+    )
     return outputs
 
 
@@ -94,21 +85,30 @@ def get_job_source():
         return EnterpriseAnalyticsJobsSource()
     if mode in {"realpython", "realpython_fake_jobs", "scrape"}:
         return RealPythonFakeJobsSource()
-    if mode in {"yc", "ycombinator", "y_combinator"}:
+    if mode in {"yc", "ycombinator", "y_combinator", "legacy_yc"}:
         return YCombinatorJobsSource()
+    if mode in {"adzuna", "adzuna_jobs"}:
+        return AdzunaJobsSource()
+    if mode in {"arbeitnow", "arbeitnow_jobs"}:
+        return ArbeitnowJobsSource()
+    if mode in {"remotive", "remotive_jobs"}:
+        return RemotiveJobsSource()
+    if mode in {"job_apis", "official_apis", "api_jobs"}:
+        return CompositeJobSource([AdzunaJobsSource(), ArbeitnowJobsSource(), RemotiveJobsSource()])
     if mode in {"all", "all_demo", "portfolio_all", "five_sources"}:
         return CompositeJobSource(
             [
                 CuratedDataJobsSource(),
                 StartupDataJobsSource(),
                 EnterpriseAnalyticsJobsSource(),
-                YCombinatorJobsSource(),
-                RealPythonFakeJobsSource(),
+                AdzunaJobsSource(),
+                ArbeitnowJobsSource(),
+                RemotiveJobsSource(),
             ]
         )
     raise ValueError(
         f"Unsupported job source mode '{settings.job_source_mode}'. "
-        "Use 'seed', 'curated', 'startup', 'enterprise', 'yc', 'realpython', or 'all'."
+        "Use 'seed', 'curated', 'startup', 'enterprise', 'adzuna', 'arbeitnow', 'remotive', 'job_apis', 'yc', 'realpython', or 'all'."
     )
 
 
@@ -144,28 +144,6 @@ def get_course_source():
         f"Unsupported course source mode '{settings.course_source_mode}'. "
         "Use 'seed', 'open_catalog', 'vendor_docs', 'university_open', 'youtube', 'hybrid', 'microsoft', 'microsoft_open', or 'all'."
     )
-
-
-def write_run_log(run_id, jobs_df, courses_df, skill_gap_df, skill_trend_df, warehouse_status: str) -> None:
-    from pathlib import Path
-
-    import pandas as pd
-
-    log_dir = Path("logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-    path = log_dir / "pipeline_runs.csv"
-    row = {
-        "run_id": run_id,
-        "run_timestamp": pd.Timestamp.now(tz="UTC").isoformat(),
-        "job_records": len(jobs_df),
-        "course_records": len(courses_df),
-        "unique_skills": skill_gap_df["skill"].nunique() if "skill" in skill_gap_df else 0,
-        "trend_rows": len(skill_trend_df),
-        "top_opportunity_skill": skill_gap_df.iloc[0]["skill"] if not skill_gap_df.empty else None,
-        "postgres": warehouse_status,
-    }
-    df = pd.DataFrame([row])
-    df.to_csv(path, mode="a", header=not path.exists(), index=False)
 
 
 def main() -> None:

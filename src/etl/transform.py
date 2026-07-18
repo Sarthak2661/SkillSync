@@ -8,6 +8,8 @@ from typing import Iterable
 import pandas as pd
 
 from src.ingestion.base import RawRecord
+from src.analytics.onet_reference import onet_growth_score, onet_profile_for_skill, onet_salary_score
+from src.analytics.source_confidence import confidence_for_source
 
 
 @dataclass(frozen=True)
@@ -197,6 +199,7 @@ def normalize_job_postings(records: Iterable[RawRecord]) -> pd.DataFrame:
         rows.append(
             {
                 "source_name": record.source_name,
+                "source_confidence": confidence_for_source(record.source_name),
                 "external_id": item.get("external_id"),
                 "title": item.get("title"),
                 "company": item.get("company"),
@@ -229,6 +232,7 @@ def normalize_course_listings(records: Iterable[RawRecord]) -> pd.DataFrame:
         rows.append(
             {
                 "source_name": record.source_name,
+                "source_confidence": confidence_for_source(record.source_name),
                 "external_id": item.get("external_id"),
                 "title": item.get("title"),
                 "platform": item.get("platform"),
@@ -277,12 +281,14 @@ def build_skill_gap_summary(jobs_df: pd.DataFrame, courses_df: pd.DataFrame) -> 
         job_demand = job_counts.get(skill, 0)
         course_supply = course_counts.get(skill, 0)
         market_signal = SKILL_MARKET_SIGNALS.get(skill, DEFAULT_MARKET_SIGNAL)
+        onet_profile = onet_profile_for_skill(skill)
+        growth_score = onet_growth_score(skill) or market_signal.growth_score
         demand_score = _normalize_count(job_demand, max_job_demand)
         course_supply_score = _normalize_count(course_supply, max_course_supply)
         salary_premium_score = _salary_premium_score(jobs_df, skill, salary_baseline, market_signal)
         opportunity_index = _opportunity_index(
             demand_score=demand_score,
-            growth_score=market_signal.growth_score,
+            growth_score=growth_score,
             salary_premium_score=salary_premium_score,
             course_supply_score=course_supply_score,
             saturation_score=market_signal.saturation_score,
@@ -298,7 +304,7 @@ def build_skill_gap_summary(jobs_df: pd.DataFrame, courses_df: pd.DataFrame) -> 
                 "gap_score": gap_score,
                 "demand_supply_ratio": demand_supply_ratio,
                 "demand_score": demand_score,
-                "growth_score": market_signal.growth_score,
+                "growth_score": growth_score,
                 "salary_premium_score": salary_premium_score,
                 "course_supply_score": course_supply_score,
                 "saturation_score": market_signal.saturation_score,
@@ -306,6 +312,13 @@ def build_skill_gap_summary(jobs_df: pd.DataFrame, courses_df: pd.DataFrame) -> 
                 "opportunity_label": _opportunity_label(opportunity_index),
                 "market_direction": market_signal.market_direction,
                 "target_job_roles": _target_job_roles(skill),
+                "taxonomy_source": onet_profile.taxonomy_source if onet_profile else "Project fallback taxonomy",
+                "onet_soc_codes": onet_profile.soc_codes if onet_profile else "",
+                "onet_occupations": onet_profile.occupation_titles if onet_profile else "",
+                "onet_wage_median_annual": onet_profile.median_wage_annual if onet_profile else None,
+                "onet_growth_outlook": onet_profile.growth_outlook if onet_profile else "",
+                "onet_projected_openings": onet_profile.projected_openings if onet_profile else None,
+                "onet_reference_url": onet_profile.source_urls if onet_profile else "",
                 "status": _gap_status(gap_score),
             }
         )
@@ -489,6 +502,10 @@ def _salary_premium_score(
     salary_baseline: float | None,
     market_signal: SkillMarketSignal,
 ) -> int:
+    official_score = onet_salary_score(skill)
+    if official_score is not None:
+        return official_score
+
     if salary_baseline is None or salary_baseline <= 0:
         return market_signal.salary_premium_score
 

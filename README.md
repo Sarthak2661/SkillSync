@@ -1,10 +1,15 @@
 # SkillSync: Job Market Intelligence Dashboard
 
-![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml)
+![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)
+![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
+![Release v1.0](https://img.shields.io/badge/release-v1.0-2E7D32)
 
 SkillSync is a job-market intelligence dashboard for people planning a data career. It compares hiring demand with available learning resources so users can see which skills are common requirements, which ones are growing, and which certifications or courses may be worth prioritizing.
 
 Behind the dashboard is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through Streamlit, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
+
+See the [v1.0 release notes](docs/release-v1.0.md) for the portfolio release scope and verification checklist.
 
 ## Purpose
 
@@ -30,7 +35,7 @@ SkillSync turns that question into a small market-intelligence product:
    A rule-based skill extractor scans titles, descriptions, subjects, roles, and products for tools and skills such as Python, SQL, Power BI, Airflow, dbt, Snowflake, AWS, Azure, and machine learning.
 
 4. **Score**
-   The project calculates job demand, course supply, skill gap, demand/supply ratio, and a Skill Opportunity Index.
+   The project calculates job demand, course supply, skill gap, demand/supply ratio, and a Skill Opportunity Index. Wage and growth inputs use O*NET occupation references when a skill maps cleanly to a data-related SOC occupation.
 
 5. **Track History**
    Every run writes a `skill_trend_history` snapshot so the dashboard can show skill demand over time.
@@ -73,7 +78,7 @@ SkillSync turns that question into a small market-intelligence product:
 ```mermaid
 flowchart LR
     subgraph Sources
-        J1["Y Combinator Jobs"]
+        J1["Official Job APIs"]
         J2["Curated Data-Role Jobs CSV"]
         J3["Real Python Fake Jobs HTML"]
         C1["YouTube Data API / Fallback"]
@@ -124,10 +129,14 @@ flowchart LR
 
 ## What It Does
 
-- Pulls job data from sample files and public job pages.
+- Pulls job data from official job APIs, curated sample files, and optional parser-test pages.
 - Pulls learning resources from Microsoft Learn, YouTube, and small maintained catalogs.
 - Extracts skills such as Python, SQL, Power BI, Airflow, dbt, Snowflake, and AWS.
 - Compares job demand with learning-resource supply.
+- Grounds skill and wage signals in O*NET-SOC occupation mappings where possible.
+- Lets users switch dashboard views between demo-safe data, live sources only, curated market snapshot, and all sources.
+- Labels every source with confidence metadata: `live_verified`, `live_broad`, `curated_demo`, `fallback_learning`, or `test_source`.
+- Adds O*NET-SOC occupation codes, mapped occupations, wage medians, and outlook fields to the skill ranking table.
 - Saves a history row for every pipeline run so trends can be tracked over time.
 - Runs basic data quality checks.
 - Recommends certifications for selected skills.
@@ -153,6 +162,36 @@ export_powerbi.py     Power BI CSV model export
 docker-compose.yml    Local PostgreSQL service
 ```
 
+## Docker Quick Start
+
+Start Docker Desktop first, then run:
+
+```powershell
+docker compose up --build
+```
+
+That starts:
+
+- PostgreSQL 17 at `localhost:5434`
+- one bootstrap pipeline run that creates local data files and Power BI CSVs
+- FastAPI at `http://127.0.0.1:8000/docs`
+- Streamlit dashboard at `http://127.0.0.1:8501`
+
+No manual database setup is required for the default demo. The API and dashboard wait until the first pipeline run has completed.
+
+Optional API keys can be added through your shell or `.env` before starting Docker:
+
+```text
+MARKET_INTEL_ADZUNA_APP_ID=
+MARKET_INTEL_ADZUNA_APP_KEY=
+MARKET_INTEL_YOUTUBE_API_KEY=
+```
+
+Stop the stack with:
+
+```powershell
+docker compose down
+```
 ## Local Setup
 
 Clone the repository and open it in VS Code:
@@ -166,9 +205,9 @@ code .
 Create a virtual environment and install the dependencies:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 copy .env.example .env
 ```
 
@@ -247,11 +286,22 @@ Useful modes:
 
 | Setting | Options |
 | --- | --- |
-| `MARKET_INTEL_JOB_SOURCE_MODE` | `curated`, `seed`, `realpython`, `yc`, `all` |
+| `MARKET_INTEL_JOB_SOURCE_MODE` | `curated`, `seed`, `adzuna`, `arbeitnow`, `remotive`, `job_apis`, `realpython`, `yc`, `all` |
 | `MARKET_INTEL_COURSE_SOURCE_MODE` | `hybrid`, `open_catalog`, `vendor_docs`, `university_open`, `youtube`, `microsoft`, `microsoft_open`, `all` |
 
 More detailed local run notes are in [docs/runbook.md](docs/runbook.md).
 
+## Airflow Orchestration
+
+The project includes a local Airflow DAG for a more realistic data-engineering workflow. `scheduler.py` remains as a simple fallback for users who do not want Docker orchestration.
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.airflow.yml --profile airflow up --build
+```
+
+Open `http://localhost:8080`, log in with `admin` / `admin`, and trigger `skillsync_market_intel_pipeline`.
+
+The DAG runs ingest, transform, quality checks, Power BI export, and optional PostgreSQL load as separate tasks.
 ## Scheduling
 
 Use `scheduler.py` for repeated pipeline runs. The interval is controlled by `MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES` in `.env`, and logs are written to `logs/scheduler.log`.
@@ -305,7 +355,7 @@ The quality layer flags common issues before the dashboard is used, including lo
 
 ## Known Limitations
 
-- Y Combinator Jobs and RealPython Fake Jobs are useful public sources, but they include broad engineering or tutorial job postings that are not always data-specific. Because of that, job skill coverage can be lower than the sample data-role source.
+- YC Jobs and RealPython Fake Jobs are kept as optional legacy/parser sources. The preferred live job path is now official APIs because they are less fragile than HTML scraping.
 - Live websites can change their HTML structure or access rules. The project includes sample/fallback sources so it can still run when a public source changes.
 - YouTube uses the YouTube Data API only when `MARKET_INTEL_YOUTUBE_API_KEY` is configured; otherwise it uses local YouTube learning fallback records.
 - PostgreSQL loading is optional and depends on Docker or a reachable local PostgreSQL database.
@@ -314,6 +364,7 @@ More notes are in:
 
 - [docs/project_notes.md](docs/project_notes.md)
 - [docs/source_notes.md](docs/source_notes.md)
+- [docs/methodology.md](docs/methodology.md)
 - [docs/runbook.md](docs/runbook.md)
 - [docs/roadmap.md](docs/roadmap.md)
 
@@ -324,8 +375,8 @@ The main ranking metric is the Skill Opportunity Index:
 ```text
 Skill Opportunity Index =
 Demand Score
-+ Growth Score
-+ Salary Premium Score
++ Growth Score, usually from O*NET occupation outlook
++ Salary Premium Score, usually from O*NET wage medians
 - Course Supply Score
 - Saturation Score
 ```
@@ -396,13 +447,6 @@ The dashboard also has a learning page:
 
 This page is meant to answer: "If this skill looks useful, what should I study or certify in next?"
 
+## Roadmap
 
-## Next Improvements
-
-- Add more real job sources with richer job descriptions.
-- Add star-schema warehouse views for Power BI direct query.
-- Add forecasting for skill demand trends after multiple scheduled runs.
-- Add clustering for role/skill group discovery.
-- Tighten source filters so broad engineering jobs do not dilute data-role insights.
-
-
+Planned work is tracked in [docs/roadmap.md](docs/roadmap.md).

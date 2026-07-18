@@ -31,3 +31,4 @@ powerbi/export/
 # Logs
 logs/
 *.log
+airflow/logs/

@@ -1,0 +1,88 @@
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metadata-db:5432/airflow
+    AIRFLOW__WEBSERVER__SECRET_KEY: skillsync-local-airflow-secret
+    PYTHONPATH: /opt/airflow/project
+    MARKET_INTEL_DB_URL: "${MARKET_INTEL_DOCKER_DB_URL:-postgresql://postgres:postgres@postgres:5432/job_market_intel}"
+    MARKET_INTEL_LOAD_TO_POSTGRES: "${MARKET_INTEL_LOAD_TO_POSTGRES:-true}"
+    MARKET_INTEL_JOB_SOURCE_MODE: "${MARKET_INTEL_JOB_SOURCE_MODE:-all}"
+    MARKET_INTEL_COURSE_SOURCE_MODE: "${MARKET_INTEL_COURSE_SOURCE_MODE:-all}"
+    MARKET_INTEL_COURSE_SOURCE_LIMIT: "${MARKET_INTEL_COURSE_SOURCE_LIMIT:-200}"
+    MARKET_INTEL_JOB_API_SOURCE_LIMIT: "${MARKET_INTEL_JOB_API_SOURCE_LIMIT:-25}"
+    MARKET_INTEL_YOUTUBE_API_KEY: "${MARKET_INTEL_YOUTUBE_API_KEY:-}"
+    MARKET_INTEL_ADZUNA_APP_ID: "${MARKET_INTEL_ADZUNA_APP_ID:-}"
+    MARKET_INTEL_ADZUNA_APP_KEY: "${MARKET_INTEL_ADZUNA_APP_KEY:-}"
+    MARKET_INTEL_ADZUNA_COUNTRY: "${MARKET_INTEL_ADZUNA_COUNTRY:-us}"
+  volumes:
+    - ./:/opt/airflow/project
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./data:/opt/airflow/project/data
+    - ./logs:/opt/airflow/project/logs
+    - ./powerbi/export:/opt/airflow/project/powerbi/export
+  working_dir: /opt/airflow/project
+  depends_on:
+    airflow-metadata-db:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
+services:
+  airflow-metadata-db:
+    image: postgres:17-alpine
+    container_name: skillsync-airflow-metadata-db
+    profiles: ["airflow"]
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - skillsync_airflow_metadata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: skillsync-airflow-init
+    profiles: ["airflow"]
+    command: >
+      bash -c "airflow db migrate &&
+      (airflow users create
+      --username admin
+      --password admin
+      --firstname SkillSync
+      --lastname Admin
+      --role Admin
+      --email admin@example.com || true)"
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: skillsync-airflow-webserver
+    profiles: ["airflow"]
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: skillsync-airflow-scheduler
+    profiles: ["airflow"]
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  skillsync_airflow_metadata:

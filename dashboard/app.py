@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import sys
 import re
@@ -12,6 +12,15 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 from src.etl.io import read_all_dataframes, read_latest_dataframe  # noqa: E402
+from src.etl.transform import build_skill_gap_summary  # noqa: E402
+from src.analytics.certifications import build_certification_recommendations  # noqa: E402
+from src.analytics.source_confidence import (  # noqa: E402
+    SOURCE_VIEW_OPTIONS,
+    add_source_confidence,
+    confidence_for_source,
+    filter_by_sources,
+    filter_trends,
+)
 from src.config.settings import settings  # noqa: E402
 
 
@@ -24,8 +33,8 @@ st.set_page_config(page_title="SkillSync", layout="wide", page_icon="SS")
 @st.cache_data(ttl=60)
 def load_data() -> dict[str, pd.DataFrame]:
     return {
-        "jobs": read_latest_dataframe("job_postings_clean"),
-        "courses": read_latest_dataframe("course_listings_clean"),
+        "jobs": add_source_confidence(read_latest_dataframe("job_postings_clean")),
+        "courses": add_source_confidence(read_latest_dataframe("course_listings_clean")),
         "gaps": read_latest_dataframe("skill_gap_summary"),
         "quality": read_latest_dataframe("quality_summary"),
         "certifications": read_latest_dataframe("certification_recommendations"),
@@ -308,8 +317,36 @@ def filtered_frames(data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     jobs = data["jobs"]
     courses = data["courses"]
 
-    categories = sorted(gaps["category"].dropna().unique()) if "category" in gaps else []
-    labels = sorted(gaps["opportunity_label"].dropna().unique()) if "opportunity_label" in gaps else []
+    with st.sidebar:
+        st.markdown("### Data Scope")
+        selected_source_view = st.radio(
+            "Source view",
+            list(SOURCE_VIEW_OPTIONS.keys()),
+            index=list(SOURCE_VIEW_OPTIONS.keys()).index("All sources"),
+        )
+        st.caption(SOURCE_VIEW_OPTIONS[selected_source_view]["description"])
+
+    source_config = SOURCE_VIEW_OPTIONS[selected_source_view]
+    filtered_jobs = filter_by_sources(jobs, source_config["jobs"])
+    filtered_courses = filter_by_sources(courses, source_config["courses"])
+
+    if selected_source_view == "All sources":
+        filtered_gaps = gaps.copy()
+    elif filtered_jobs.empty and filtered_courses.empty:
+        filtered_gaps = gaps.iloc[0:0].copy()
+    else:
+        filtered_gaps = build_skill_gap_summary(filtered_jobs, filtered_courses)
+        filtered_gaps = ensure_columns(
+            filtered_gaps,
+            {
+                "opportunity_index": 0,
+                "opportunity_label": "Unknown",
+                "target_job_roles": "Data Analyst | Data Engineer | Data Scientist",
+            },
+        )
+
+    categories = sorted(filtered_gaps["category"].dropna().unique()) if "category" in filtered_gaps else []
+    labels = sorted(filtered_gaps["opportunity_label"].dropna().unique()) if "opportunity_label" in filtered_gaps else []
 
     with st.sidebar:
         st.markdown("### Filters")
@@ -317,7 +354,6 @@ def filtered_frames(data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         selected_labels = st.multiselect("Opportunity labels", labels, default=labels)
         min_opportunity = st.slider("Minimum opportunity index", 0, 100, 0)
 
-    filtered_gaps = gaps.copy()
     if selected_categories and "category" in filtered_gaps:
         filtered_gaps = filtered_gaps[filtered_gaps["category"].isin(selected_categories)]
     if selected_labels and "opportunity_label" in filtered_gaps:
@@ -326,16 +362,19 @@ def filtered_frames(data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         filtered_gaps = filtered_gaps[pd.to_numeric(filtered_gaps["opportunity_index"], errors="coerce").fillna(0) >= min_opportunity]
 
     selected_skills = set(filtered_gaps["skill"]) if "skill" in filtered_gaps else set()
-    filtered_trends = trends[trends["skill"].isin(selected_skills)].copy() if not trends.empty and selected_skills else trends
+    filtered_trends = filter_trends(trends, source_config["jobs"], selected_skills)
+    filtered_certifications = build_certification_recommendations(filtered_gaps) if not filtered_gaps.empty else data["certifications"].iloc[0:0].copy()
 
     return {
-        "jobs": jobs,
-        "courses": courses,
+        "jobs": filtered_jobs,
+        "courses": filtered_courses,
         "gaps": filtered_gaps,
         "quality": data["quality"],
-        "certifications": data["certifications"],
+        "certifications": filtered_certifications,
         "trends": filtered_trends,
         "runs": data["runs"],
+        "source_view": selected_source_view,
+        "source_view_description": source_config["description"],
     }
 
 
@@ -344,29 +383,41 @@ def source_catalog() -> pd.DataFrame:
         [
             {
                 "type": "Jobs",
+                "source": "Adzuna Jobs API",
+                "mode": "adzuna",
+                "source_confidence": "live_verified",
+                "site_or_file": "https://api.adzuna.com/v1/api/jobs/",
+                "use": "Official job API. Requires free app id/key in .env.",
+            },
+            {
+                "type": "Jobs",
+                "source": "Arbeitnow Job API",
+                "mode": "arbeitnow",
+                "source_confidence": "live_verified",
+                "site_or_file": "https://www.arbeitnow.com/api/job-board-api",
+                "use": "Public no-key JSON job API.",
+            },
+            {
+                "type": "Jobs",
+                "source": "Remotive Jobs API",
+                "mode": "remotive",
+                "source_confidence": "live_verified",
+                "site_or_file": "https://remotive.com/api/remote-jobs",
+                "use": "Official remote-jobs JSON API.",
+            },
+            {
+                "type": "Jobs",
                 "source": "Sample Data Jobs",
                 "mode": "curated",
+                "source_confidence": "curated_demo",
                 "site_or_file": "data/sample/curated_data_jobs.csv",
                 "use": "Local jobs with full data-role descriptions.",
             },
             {
                 "type": "Jobs",
-                "source": "Real Python Fake Jobs",
-                "mode": "realpython",
-                "site_or_file": "https://realpython.github.io/fake-jobs/",
-                "use": "Public HTML page used to test the scraper.",
-            },
-            {
-                "type": "Jobs",
-                "source": "Y Combinator Jobs",
-                "mode": "yc",
-                "site_or_file": "https://www.ycombinator.com/jobs",
-                "use": "Startup jobs from a public YC jobs page.",
-            },
-            {
-                "type": "Jobs",
                 "source": "Startup Data Jobs",
                 "mode": "startup",
+                "source_confidence": "curated_demo",
                 "site_or_file": "src/ingestion/job_sources.py",
                 "use": "Small startup-style data job feed.",
             },
@@ -374,13 +425,31 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Jobs",
                 "source": "Enterprise Analytics Jobs",
                 "mode": "enterprise",
+                "source_confidence": "curated_demo",
                 "site_or_file": "src/ingestion/job_sources.py",
                 "use": "Small enterprise BI and cloud analytics feed.",
+            },
+            {
+                "type": "Jobs",
+                "source": "Y Combinator Jobs",
+                "mode": "yc",
+                "source_confidence": "live_broad",
+                "site_or_file": "https://www.ycombinator.com/jobs",
+                "use": "Optional legacy HTML scraper. Real but broad; not used in the default all-source mix.",
+            },
+            {
+                "type": "Jobs",
+                "source": "Real Python Fake Jobs",
+                "mode": "realpython",
+                "source_confidence": "test_source",
+                "site_or_file": "https://realpython.github.io/fake-jobs/",
+                "use": "Public fake job page used to test scraper parsing.",
             },
             {
                 "type": "Courses",
                 "source": "Seed Courses",
                 "mode": "seed",
+                "source_confidence": "fallback_learning",
                 "site_or_file": "src/ingestion/seed_sources.py",
                 "use": "Offline smoke-test course data.",
             },
@@ -388,6 +457,7 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Courses",
                 "source": "YouTube Learning",
                 "mode": "youtube",
+                "source_confidence": "fallback_learning",
                 "site_or_file": "YouTube Data API or local fallback records",
                 "use": "Free video learning source. Uses API key when configured.",
             },
@@ -395,6 +465,7 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Courses",
                 "source": "Open Course Catalog",
                 "mode": "open_catalog",
+                "source_confidence": "curated_demo",
                 "site_or_file": "freeCodeCamp, Kaggle Learn, Microsoft Learn, Airflow, Databricks, DeepLearning.AI",
                 "use": "Learning links that are easy to reproduce locally.",
             },
@@ -402,6 +473,7 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Courses",
                 "source": "Microsoft Learn Catalog",
                 "mode": "microsoft",
+                "source_confidence": "live_verified",
                 "site_or_file": "https://learn.microsoft.com/api/catalog/",
                 "use": "Live public Microsoft Learn catalog API.",
             },
@@ -409,6 +481,7 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Courses",
                 "source": "Vendor Docs Catalog",
                 "mode": "vendor_docs",
+                "source_confidence": "curated_demo",
                 "site_or_file": "Airflow docs, dbt docs, Snowflake docs",
                 "use": "Vendor documentation and training resources.",
             },
@@ -416,12 +489,12 @@ def source_catalog() -> pd.DataFrame:
                 "type": "Courses",
                 "source": "University Open Catalog",
                 "mode": "university_open",
+                "source_confidence": "curated_demo",
                 "site_or_file": "edX, MIT OpenCourseWare, Coursera browse pages",
                 "use": "Open statistics, ML, and visualization resources.",
             },
         ]
     )
-
 
 def scheduler_summary(runs: pd.DataFrame) -> dict[str, str]:
     latest_timestamp = "No run logged yet"
@@ -464,20 +537,26 @@ def render_source_panel(data: dict[str, pd.DataFrame]) -> None:
     for dataset, df in [("Jobs", data["jobs"]), ("Courses", data["courses"])]:
         if not df.empty and "source_name" in df:
             for source_name, count in df.groupby("source_name").size().items():
-                observed_rows.append({"dataset": dataset, "active_source": source_name, "records": int(count)})
+                observed_rows.append({
+                    "dataset": dataset,
+                    "active_source": source_name,
+                    "source_confidence": confidence_for_source(source_name),
+                    "records": int(count),
+                })
 
-    st.markdown("### Active Data Sources")
+    st.markdown(f"### Active Data Sources ({data.get('source_view', 'All sources')})")
     if observed_rows:
         st.dataframe(pd.DataFrame(observed_rows), width="stretch", hide_index=True)
     st.markdown(
         """
         **Source sites and files**
 
+        - Adzuna Jobs API: `https://api.adzuna.com/v1/api/jobs/` (requires app id/key)
+        - Arbeitnow Job API: `https://www.arbeitnow.com/api/job-board-api`
+        - Remotive Jobs API: `https://remotive.com/api/remote-jobs`
         - Sample jobs: `data/sample/curated_data_jobs.csv`
-        - Y Combinator Jobs: `https://www.ycombinator.com/jobs`
-        - Job scraper: `https://realpython.github.io/fake-jobs/`
-        - Startup data jobs: small local feed in `src/ingestion/job_sources.py`
-        - Enterprise analytics jobs: small local feed in `src/ingestion/job_sources.py`
+        - Startup and enterprise data jobs: local feeds in `src/ingestion/job_sources.py`
+        - Optional legacy/parser sources: YC Jobs and RealPython Fake Jobs
         - YouTube Learning: YouTube Data API if `MARKET_INTEL_YOUTUBE_API_KEY` is configured; local fallback otherwise
         - Course API: `https://learn.microsoft.com/api/catalog/`
         - Open-course catalog: freeCodeCamp, Kaggle Learn, Apache Airflow docs, Databricks training, DeepLearning.AI
@@ -536,6 +615,9 @@ def render_overview(data: dict[str, pd.DataFrame]) -> None:
         "job_demand",
         "course_supply",
         "target_job_roles",
+        "onet_soc_codes",
+        "onet_wage_median_annual",
+        "onet_growth_outlook",
     ]
     st.dataframe(gaps[columns].head(15), width="stretch", hide_index=True)
 
@@ -605,6 +687,9 @@ def render_explorer(data: dict[str, pd.DataFrame]) -> None:
     courses = data["courses"].copy()
 
     skill_options = sorted(gaps["skill"].dropna().unique()) if "skill" in gaps else []
+    if not skill_options:
+        st.warning("No skills found for the selected data scope. Try All sources or run the pipeline with more source modes enabled.")
+        return
     selected_skill = st.selectbox("Pick a skill to inspect", skill_options)
 
     selected_gap = gaps[gaps["skill"] == selected_skill]
@@ -647,7 +732,7 @@ def render_learning_path(data: dict[str, pd.DataFrame]) -> None:
     gaps = data["gaps"].copy()
 
     if certifications.empty:
-        st.warning("No certification recommendations found. Run `python pipeline.py` first.")
+        st.warning("No certification recommendations found for the selected data scope. Try All sources or run `python pipeline.py` with more sources enabled.")
         return
 
     st.markdown("### Learning & Certification Path")
@@ -723,6 +808,8 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
     st.markdown("### How To Read SkillSync")
     st.markdown(
         """
+        **Data Scope** lets you switch between demo-safe records, live sources, a curated market snapshot, or all sources. The dashboard recalculates current skill rankings for the selected source view.
+
         **Skill Opportunity Index** is a 0 to 100 score based on demand, growth, salary signal,
         course supply, and saturation. I use it as a shortcut for deciding which skills are worth
         looking at first.
@@ -741,7 +828,12 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
     for name, df in [("Jobs", data["jobs"]), ("Courses", data["courses"])]:
         if not df.empty and "source_name" in df:
             for source_name, count in df.groupby("source_name").size().items():
-                source_rows.append({"dataset": name, "source_name": source_name, "records": count})
+                source_rows.append({
+                    "dataset": name,
+                    "source_name": source_name,
+                    "source_confidence": confidence_for_source(source_name),
+                    "records": count,
+                })
     st.dataframe(pd.DataFrame(source_rows), width="stretch", hide_index=True)
 
     st.markdown("### Supported Job And Course Sources")
@@ -750,11 +842,12 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
         """
         **Job posting sources**
 
+        - Adzuna Jobs API: `https://api.adzuna.com/v1/api/jobs/` (requires app id/key)
+        - Arbeitnow Job API: `https://www.arbeitnow.com/api/job-board-api`
+        - Remotive Jobs API: `https://remotive.com/api/remote-jobs`
         - Sample data-role jobs: `data/sample/curated_data_jobs.csv`
-        - Y Combinator Jobs scraper: `https://www.ycombinator.com/jobs`
-        - Real Python Fake Jobs scraper: `https://realpython.github.io/fake-jobs/`
-        - Startup data jobs: local feed in `src/ingestion/job_sources.py`
-        - Enterprise analytics jobs: local feed in `src/ingestion/job_sources.py`
+        - Startup and enterprise data jobs: local feeds in `src/ingestion/job_sources.py`
+        - Optional legacy/parser sources: YC Jobs and RealPython Fake Jobs
 
         **Course listing sources**
 
@@ -803,9 +896,9 @@ def main() -> None:
     elif page == "Learning & Certification Path":
         render_learning_path(filtered)
     elif page == "Logs & Quality":
-        render_logs_quality(data)
+        render_logs_quality(filtered)
     else:
-        render_guide(data)
+        render_guide(filtered)
 
 
 if __name__ == "__main__":

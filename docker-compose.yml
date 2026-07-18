@@ -1,13 +1,39 @@
+x-skillsync-env: &skillsync-env
+  MARKET_INTEL_DB_URL: "${MARKET_INTEL_DOCKER_DB_URL:-postgresql://postgres:postgres@postgres:5432/job_market_intel}"
+  MARKET_INTEL_LOAD_TO_POSTGRES: "${MARKET_INTEL_LOAD_TO_POSTGRES:-true}"
+  MARKET_INTEL_JOB_SOURCE_MODE: "${MARKET_INTEL_JOB_SOURCE_MODE:-all}"
+  MARKET_INTEL_COURSE_SOURCE_MODE: "${MARKET_INTEL_COURSE_SOURCE_MODE:-all}"
+  MARKET_INTEL_COURSE_SOURCE_LIMIT: "${MARKET_INTEL_COURSE_SOURCE_LIMIT:-200}"
+  MARKET_INTEL_JOB_API_SOURCE_LIMIT: "${MARKET_INTEL_JOB_API_SOURCE_LIMIT:-25}"
+  MARKET_INTEL_YOUTUBE_API_KEY: "${MARKET_INTEL_YOUTUBE_API_KEY:-}"
+  MARKET_INTEL_ADZUNA_APP_ID: "${MARKET_INTEL_ADZUNA_APP_ID:-}"
+  MARKET_INTEL_ADZUNA_APP_KEY: "${MARKET_INTEL_ADZUNA_APP_KEY:-}"
+  MARKET_INTEL_ADZUNA_COUNTRY: "${MARKET_INTEL_ADZUNA_COUNTRY:-us}"
+
+x-skillsync-app: &skillsync-app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    <<: *skillsync-env
+  volumes:
+    - ./data:/app/data
+    - ./logs:/app/logs
+    - ./powerbi/export:/app/powerbi/export
+  depends_on:
+    postgres:
+      condition: service_healthy
+
 services:
   postgres:
-    image: postgres:16
-    container_name: market-intel-postgres
+    image: postgres:17-alpine
+    container_name: skillsync-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: job_market_intel
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - market_intel_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -15,6 +41,41 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  pipeline-init:
+    <<: *skillsync-app
+    container_name: skillsync-pipeline-init
+    command: sh -c "python pipeline.py && python export_powerbi.py"
+    restart: "no"
+
+  api:
+    <<: *skillsync-app
+    container_name: skillsync-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pipeline-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dashboard:
+    <<: *skillsync-app
+    container_name: skillsync-dashboard
+    command: streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true
+    ports:
+      - "8501:8501"
+    depends_on:
+      pipeline-init:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
 
 volumes:
   market_intel_pgdata:

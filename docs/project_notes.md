@@ -1,40 +1,23 @@
-﻿# Project Notes
+# Project Notes
 
-These are the working notes behind a few project choices. I keep them here so the repo still makes sense after I come back to it later.
+These notes explain the choices that are easy to miss when reading the code.
 
-## Why There Are Sample Sources
+## Live And Curated Sources
 
-The live sources are useful, but they are not equally clean.
+Live APIs make the dataset current, but their coverage changes from run to run. Curated records keep demos, tests, and screenshots repeatable. The dashboard exposes both through source modes instead of presenting them as equivalent evidence.
 
-- RealPython Fake Jobs is stable and easy to scrape, but many rows are not data jobs.
-- Y Combinator Jobs gives current startup roles, but many postings are software engineering roles rather than analytics or data engineering roles.
-- The curated job CSV gives cleaner data-role descriptions, so it is better for screenshots, demos, and repeatable tests.
+YC Jobs and RealPython Fake Jobs remain optional parser sources. The default live path uses documented APIs from Adzuna, Arbeitnow, and Remotive.
 
-That is why the project keeps both live sources and sample/local sources.
+## Skill Extraction
 
-## Why Skill Extraction Is Rule-Based
+Skill extraction uses maintained regex patterns. It is deterministic, inexpensive, and straightforward to test. The tradeoff is lower recall when a posting uses an unexpected synonym or vague wording.
 
-The skill extractor is intentionally simple. It uses a maintained list of regex patterns instead of an NLP model.
+## Opportunity Scoring
 
-Reasons:
+The opportunity index combines observed demand and course supply with wage and growth references. O*NET-SOC mappings provide wage and outlook inputs where a skill maps cleanly to a data occupation. Maintained fallback values cover skills without a useful mapping.
 
-- It is easy to explain in an interview.
-- It is reproducible when someone clones the repo.
-- It avoids API keys or model costs.
-- It is easier to test with small examples.
+The score is a ranking aid, not a labor-market forecast. Salary currencies, geography, source coverage, and limited history still affect the result.
 
-The tradeoff is that synonyms and vague wording can be missed.
+## Historical Trends
 
-## Why The Opportunity Index Uses Hand-Maintained Scores
-
-The project does not have months of history yet, so growth and saturation cannot be fully calculated from the data. For now, those fields use simple maintained assumptions in `src/etl/transform.py`.
-
-Once there are enough scheduled runs, the growth score could be replaced with a real week-over-week or month-over-month trend calculation.
-
-## What I Would Improve Next
-
-- Filter Y Combinator jobs more aggressively for data-related titles.
-- Add a small role classifier for Analyst, Engineer, Scientist, and BI roles.
-- Add a Docker-based CI check for PostgreSQL loading.
-- Add parser tests whenever a new source is added.
-- Replace the hand-maintained growth score once there are enough historical runs.
+Each successful run appends a skill snapshot. Early trend views are descriptive because the repository does not yet contain enough history for reliable forecasting. The local scheduler and Airflow DAG use the same pipeline steps, so either route produces compatible history.

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         env_prefix="MARKET_INTEL_",
         env_file=str(PROJECT_ROOT / ".env"),
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     db_url: str | None = None
@@ -25,6 +26,10 @@ class Settings(BaseSettings):
     course_source_limit: int = 200
     youtube_api_key: str | None = None
     youtube_source_limit: int = 12
+    adzuna_app_id: str | None = None
+    adzuna_app_key: str | None = None
+    adzuna_country: str = "us"
+    job_api_source_limit: int = 25
     schedule_interval_minutes: int = 60
     scheduler_run_on_start: bool = True
 

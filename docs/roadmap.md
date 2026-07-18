@@ -1,28 +1,28 @@
-﻿# Roadmap
+# Roadmap
 
-This is not a big product roadmap. It is just the next set of improvements that would make the project stronger as a portfolio repo and easier to trust as a small analytics system.
+The current release covers ingestion, quality checks, warehouse loading, orchestration, API access, dashboard views, and Power BI exports. The next work should improve evidence quality rather than add more surfaces.
 
-## Short Term
+## Data Coverage
 
-- Tighten Y Combinator filtering so broad software roles do not dilute the data-role signal.
-- Add one parser test whenever a scraper or source connector changes.
-- Add a simple role classifier for Analyst, BI, Engineer, Scientist, and ML/AI roles.
-- Keep the README screenshots updated after dashboard layout changes.
+- Normalize salary currency and geography before comparing wage signals.
+- Add another documented job API with richer data-role descriptions.
+- Add parser fixtures whenever a source connector changes.
+- Tighten role classification for Analyst, BI, Engineer, Scientist, and ML/AI roles.
 
-## Data And Scoring
+## Trends And Scoring
 
-- Replace hand-maintained growth scores with real trend calculations after enough scheduled runs exist.
-- Add source-level confidence labels so charts can separate curated, fallback, and live data.
-- Add better salary normalization by currency and location.
+- Replace fallback growth assumptions after enough weekly history exists.
+- Add confidence intervals or minimum-sample rules to trend claims.
+- Evaluate skill co-occurrence clusters by role category.
 
 ## Warehouse And BI
 
-- Add star-schema views for Power BI direct query.
-- Add a Docker-based warehouse smoke test that runs in CI.
-- Add a small dbt layer if the warehouse becomes the main analytics surface.
+- Add PostgreSQL integration tests to CI with a temporary service container.
+- Add warehouse views for Power BI direct query.
+- Consider dbt only if warehouse transformations become the primary modeling layer.
 
 ## Dashboard
 
-- Add saved filter presets for analyst, data engineer, BI analyst, and data scientist views.
-- Add a clearer warning when a selected source has low skill coverage.
-- Add a weekly trend summary once there are at least seven days of scheduled runs.
+- Add saved role presets for common data-career paths.
+- Surface low-coverage warnings beside affected charts.
+- Add a weekly summary after at least seven daily snapshots are available.

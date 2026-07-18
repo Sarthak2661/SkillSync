@@ -115,6 +115,125 @@ class YCombinatorJobsSource(SourceConnector):
         return response.text
 
 
+
+class AdzunaJobsSource(SourceConnector):
+    """Fetch real job postings from the official Adzuna API when credentials are configured."""
+
+    source_name = "adzuna_jobs"
+    source_type = "job_posting"
+
+    def fetch(self) -> list[RawRecord]:
+        if not settings.adzuna_app_id or not settings.adzuna_app_key:
+            return []
+
+        country = settings.adzuna_country.strip().lower() or "us"
+        url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/1"
+        response = requests.get(
+            url,
+            params={
+                "app_id": settings.adzuna_app_id,
+                "app_key": settings.adzuna_app_key,
+                "what": "data analyst data engineer data scientist",
+                "results_per_page": settings.job_api_source_limit,
+                "content-type": "application/json",
+            },
+            headers={"User-Agent": settings.user_agent},
+            timeout=25,
+        )
+        response.raise_for_status()
+        rows = response.json().get("results", [])[: settings.job_api_source_limit]
+        collected_at = utc_now()
+        records: list[dict[str, object]] = []
+        for row in rows:
+            company = row.get("company") or {}
+            location = row.get("location") or {}
+            records.append(
+                {
+                    "external_id": str(row.get("id") or stable_text_id(row.get("title"), row.get("redirect_url"))),
+                    "title": row.get("title") or "Unknown role",
+                    "company": company.get("display_name") or "Unknown",
+                    "location": location.get("display_name") or "Unknown",
+                    "remote_type": infer_remote_type(str(location.get("display_name") or ""), str(row.get("description") or "")),
+                    "salary_min": _safe_int(row.get("salary_min")),
+                    "salary_max": _safe_int(row.get("salary_max")),
+                    "description": html_to_text(row.get("description")),
+                    "posted_at": row.get("created"),
+                    "url": row.get("redirect_url") or url,
+                }
+            )
+        return _raw_records(self.source_name, self.source_type, records, collected_at)
+
+
+class ArbeitnowJobsSource(SourceConnector):
+    """Fetch real job postings from the public Arbeitnow job board API."""
+
+    source_name = "arbeitnow_jobs"
+    source_type = "job_posting"
+    url = "https://www.arbeitnow.com/api/job-board-api"
+
+    def fetch(self) -> list[RawRecord]:
+        response = requests.get(self.url, headers={"User-Agent": settings.user_agent}, timeout=25)
+        response.raise_for_status()
+        rows = response.json().get("data", [])[: settings.job_api_source_limit]
+        collected_at = utc_now()
+        records: list[dict[str, object]] = []
+        for row in rows:
+            description = html_to_text(row.get("description"))
+            location = row.get("location") or "Unknown"
+            records.append(
+                {
+                    "external_id": str(row.get("slug") or stable_text_id(row.get("title"), row.get("url"))),
+                    "title": row.get("title") or "Unknown role",
+                    "company": row.get("company_name") or "Unknown",
+                    "location": location,
+                    "remote_type": "Remote" if row.get("remote") else infer_remote_type(str(location), description),
+                    "salary_min": None,
+                    "salary_max": None,
+                    "description": description,
+                    "posted_at": _timestamp_to_iso(row.get("created_at")),
+                    "url": row.get("url") or self.url,
+                }
+            )
+        return _raw_records(self.source_name, self.source_type, records, collected_at)
+
+
+class RemotiveJobsSource(SourceConnector):
+    """Fetch real remote job postings from the official Remotive API."""
+
+    source_name = "remotive_jobs"
+    source_type = "job_posting"
+    url = "https://remotive.com/api/remote-jobs"
+
+    def fetch(self) -> list[RawRecord]:
+        response = requests.get(
+            self.url,
+            params={"search": "data"},
+            headers={"User-Agent": settings.user_agent},
+            timeout=25,
+        )
+        response.raise_for_status()
+        rows = response.json().get("jobs", [])[: settings.job_api_source_limit]
+        collected_at = utc_now()
+        records: list[dict[str, object]] = []
+        for row in rows:
+            description = html_to_text(row.get("description"))
+            location = row.get("candidate_required_location") or "Remote"
+            records.append(
+                {
+                    "external_id": str(row.get("id") or stable_text_id(row.get("title"), row.get("url"))),
+                    "title": row.get("title") or "Unknown role",
+                    "company": row.get("company_name") or "Unknown",
+                    "location": location,
+                    "remote_type": "Remote",
+                    "salary_min": None,
+                    "salary_max": None,
+                    "description": description,
+                    "posted_at": row.get("publication_date"),
+                    "url": row.get("url") or self.url,
+                }
+            )
+        return _raw_records(self.source_name, self.source_type, records, collected_at)
+
 class CompositeJobSource(SourceConnector):
     source_name = "composite_job_sources"
     source_type = "job_posting"
@@ -125,7 +244,10 @@ class CompositeJobSource(SourceConnector):
     def fetch(self) -> list[RawRecord]:
         records: list[RawRecord] = []
         for source in self.sources:
-            records.extend(source.fetch())
+            try:
+                records.extend(source.fetch())
+            except requests.RequestException:
+                continue
         return records
 
 
@@ -323,8 +445,37 @@ def _location_from_yc_detail(detail_text: str) -> str:
 
 
 def _split_yc_detail_parts(text: str) -> list[str]:
-    return [part.strip() for part in re.split(r"(?:â€¢|•)", text) if part.strip()]
+    return [part.strip() for part in re.split(r"(?:ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢|Ã¢â‚¬Â¢)", text) if part.strip()]
 
+
+
+def html_to_text(value: object) -> str:
+    if value is None:
+        return ""
+    return BeautifulSoup(str(value), "lxml").get_text(" ", strip=True)
+
+
+def stable_text_id(*parts: object) -> str:
+    key = "|".join(str(part or "") for part in parts).lower()
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+
+
+def _safe_int(value: object) -> int | None:
+    try:
+        if value is None:
+            return None
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _timestamp_to_iso(value: object) -> str | None:
+    if value is None:
+        return None
+    try:
+        return datetime.fromtimestamp(int(value), tz=timezone.utc).date().isoformat()
+    except (TypeError, ValueError, OSError):
+        return str(value)
 
 def stable_job_id(posting: ScrapedJobPosting) -> str:
     key = "|".join([posting.title, posting.company, posting.location, posting.url]).lower()

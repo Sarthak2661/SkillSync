@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip
@@ -59,7 +59,7 @@ jobs:
         run: python scripts/smoke_check.py
 
       - name: Upload Power BI CSV model
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: skillsync-powerbi-csvs
           path: powerbi/export/*.csv
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate Compose files
         run: |

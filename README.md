@@ -1,14 +1,16 @@
 # SkillSync: Job Market Intelligence Dashboard
 
-SkillSync is a Python ETL project for comparing job-market skills with course and video resources.
+![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)
 
-The project collects job postings and learning resources, extracts skills from the text, and turns the results into CSV outputs, a Streamlit dashboard, FastAPI endpoints, optional PostgreSQL tables, and Power BI-ready files.
+SkillSync is a job-market intelligence dashboard for people planning a data career. It compares hiring demand with available learning resources so users can see which skills are common requirements, which ones are growing, and which certifications or courses may be worth prioritizing.
+
+Behind the dashboard is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through Streamlit, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
 
 ## Purpose
 
 People trying to enter data analyst, data engineering, or data science roles often see long lists of skills: SQL, Python, Power BI, Airflow, dbt, Snowflake, AWS, and many more. The hard part is not finding learning resources. The hard part is knowing which skills are actually showing up in job postings, whether enough learning material exists for those skills, and which certifications might be worth considering.
 
-SkillSync treats that as a small market-intelligence problem:
+SkillSync turns that question into a small market-intelligence product:
 
 - What skills are employers asking for?
 - Which skills have enough courses or videos available?

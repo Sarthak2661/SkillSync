@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -8,7 +9,34 @@ from src.analytics.powerbi import export_powerbi_model
 
 
 class PowerBiStarSchemaTests(unittest.TestCase):
-    def test_star_schema_keys_and_relationships(self):
+    @patch("src.analytics.powerbi.latest_run_id", return_value="20260719_120000")
+    @patch("src.analytics.powerbi.load_trend_history")
+    @patch("src.analytics.powerbi.load_latest_outputs")
+    def test_star_schema_keys_and_relationships(self, mock_outputs, mock_trends, _mock_run_id):
+        mock_outputs.return_value = {
+            "jobs": pd.DataFrame([{
+                "external_id": "job-1", "source_name": "test_jobs", "source_confidence": "test_source",
+                "title": "Data Engineer", "location": "Remote", "skills": "Python|SQL",
+                "skill_confidence": "high",
+            }]),
+            "courses": pd.DataFrame([{
+                "external_id": "course-1", "source_name": "test_courses", "source_confidence": "test_source",
+                "title": "SQL Fundamentals", "skills": "SQL", "skill_confidence": "high",
+            }]),
+            "skill_gaps": pd.DataFrame([{
+                "skill": "SQL", "category": "Data Engineering", "taxonomy_source": "project_taxonomy",
+                "onet_evidence_status": "project_fallback", "opportunity_index": 55,
+            }]),
+            "certifications": pd.DataFrame([{"skill": "SQL", "certification": "SQL Practice"}]),
+            "quality": pd.DataFrame([{"dataset": "jobs", "check_name": "row_count", "status": "passed"}]),
+        }
+        mock_trends.return_value = pd.DataFrame([{
+            "run_id": "20260719_120000", "run_timestamp": "2026-07-19T12:00:00Z",
+            "source_name": "test_jobs", "skill": "SQL", "location": "Remote",
+            "role_category": "Data Engineer", "job_count": 1, "course_count": 1,
+            "salary_min_avg": 90000, "salary_max_avg": 120000,
+        }])
+
         with tempfile.TemporaryDirectory() as folder:
             exported = export_powerbi_model(Path(folder))
             expected = {

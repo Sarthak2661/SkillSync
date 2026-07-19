@@ -3,13 +3,13 @@
 [![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml)
 ![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)
 ![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
-![Release v1.0](https://img.shields.io/badge/release-v1.0-2E7D32)
+![Release v1.5](https://img.shields.io/badge/release-v1.5-2E7D32)
 
 SkillSync is a job-market intelligence dashboard for people planning a data career. It compares hiring demand with available learning resources so users can see which skills are common requirements, which ones are growing, and which certifications or courses may be worth prioritizing.
 
 Behind the dashboard is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through Streamlit, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
 
-See the [v1.0 release notes](docs/release-v1.0.md) for the portfolio release scope and verification checklist.
+See the [v1.5 release notes](docs/release-v1.5.md) for the current release scope and verification checklist.
 
 ## Purpose
 

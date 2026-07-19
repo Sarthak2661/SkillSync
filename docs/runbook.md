@@ -62,7 +62,7 @@ If PowerShell blocks scripts, use the `.cmd` files in `scripts/` instead.
 
 Check the source modes in `.env`.
 
-For the full local demo, use:
+The default `.env.example` uses curated jobs and hybrid courses so a first run is quick and repeatable. To opt into every configured source, including live network calls, use:
 
 ```text
 MARKET_INTEL_JOB_SOURCE_MODE=all
@@ -70,7 +70,7 @@ MARKET_INTEL_COURSE_SOURCE_MODE=all
 MARKET_INTEL_COURSE_SOURCE_LIMIT=200
 ```
 
-For a faster screenshot-friendly run, use curated jobs with the hybrid course source:
+To restore the dependable default modes, use:
 
 ```powershell
 $env:MARKET_INTEL_JOB_SOURCE_MODE="curated"

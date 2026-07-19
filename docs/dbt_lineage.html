@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box} body{margin:0;background:#0b1118;color:#e8eef5;font-family:Segoe UI,Arial,sans-serif}
+main{width:1600px;height:900px;padding:42px 54px;background:linear-gradient(135deg,#0b1118,#101b27)}
+h1{margin:0;font-size:34px} p{color:#94a8ba;margin:8px 0 30px}.flow{display:grid;grid-template-columns:230px 230px 240px 310px 380px;gap:34px;align-items:start}
+.col h2{font-size:13px;text-transform:uppercase;color:#57d8c7;border-bottom:1px solid #284052;padding-bottom:9px}
+.node{position:relative;border:1px solid #2e4a5f;background:#121e29;border-radius:6px;padding:13px 14px;margin:14px 0;font-size:14px;box-shadow:0 8px 20px #0005}
+.node:after{content:"";position:absolute;right:-35px;top:50%;width:34px;border-top:1px solid #4e7188}.col:last-child .node:after{display:none}
+.source{border-left:4px solid #f0b429}.stage{border-left:4px solid #58a6ff}.intermediate{border-left:4px solid #b38df5}.fact{border-left:4px solid #ff6b6b}.dim{border-left:4px solid #57d8c7}.mart{border-left:4px solid #f0b429}
+.small{font-size:12px;color:#8fa3b4;margin-top:4px}.tests{margin-top:30px;padding:17px;border:1px solid #315367;background:#0e1821;border-radius:6px;color:#b9cad7}
+.badge{display:inline-block;margin-right:8px;padding:5px 9px;border-radius:4px;background:#183545;color:#69dfcf;font-size:12px}</style></head><body><main>
+<h1>SkillSync dbt lineage</h1><p>Generated analytics path from PostgreSQL pipeline outputs to tested Power BI marts</p><div class="flow">
+<section class="col"><h2>PostgreSQL sources</h2><div class="node source">job_postings</div><div class="node source">course_listings</div><div class="node source">skill_gap_summary</div><div class="node source">skill_trend_history</div></section>
+<section class="col"><h2>Staging</h2><div class="node stage">stg_jobs<div class="small">clean job grain</div></div><div class="node stage">stg_courses<div class="small">clean course grain</div></div></section>
+<section class="col"><h2>Intermediate</h2><div class="node intermediate">int_skill_mentions<div class="small">unified record-skill grain</div></div></section>
+<section class="col"><h2>Star schema</h2><div class="node fact">fact_job_skill_mentions</div><div class="node fact">fact_course_skill_coverage</div><div class="node fact">fact_skill_trend_history</div><div class="node dim">dim_skill</div><div class="node dim">dim_role ? dim_location</div><div class="node dim">dim_source ? dim_time</div></section>
+<section class="col"><h2>Business marts</h2><div class="node mart">mart_skill_opportunity<div class="small">demand, supply, growth, salary, saturation</div></div><div class="node mart">mart_role_skill_demand<div class="small">role ? skill ? time</div></div><div class="node mart">mart_role_readiness_inputs<div class="small">role demand minus learning coverage</div></div><div class="tests"><span class="badge">14 models</span><span class="badge">58 tests</span><span class="badge">PASS 72/72</span><br><br>not null ? unique ? accepted values ? relationships</div></section>
+</div></main></body></html>

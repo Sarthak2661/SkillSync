@@ -424,7 +424,10 @@ class CompositeCourseSource(SourceConnector):
     def fetch(self) -> list[RawRecord]:
         records: list[RawRecord] = []
         for source in self.sources:
-            records.extend(source.fetch())
+            try:
+                records.extend(source.fetch())
+            except requests.RequestException:
+                continue
         return records
 
 

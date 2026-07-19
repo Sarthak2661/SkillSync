@@ -3,13 +3,13 @@
 [![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml)
 ![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)
 ![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
-![Release v1.0](https://img.shields.io/badge/release-v1.0-2E7D32)
+![Release v1.5](https://img.shields.io/badge/release-v1.5-2E7D32)
 
 SkillSync is a job-market intelligence dashboard for people planning a data career. It compares hiring demand with available learning resources so users can see which skills are common requirements, which ones are growing, and which certifications or courses may be worth prioritizing.
 
 Behind the dashboard is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through Streamlit, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
 
-See the [v1.0 release notes](docs/release-v1.0.md) for the portfolio release scope and verification checklist.
+See the [v1.5 release notes](docs/release-v1.5.md) for the current release scope and verification checklist.
 
 ## Purpose
 
@@ -72,6 +72,10 @@ SkillSync turns that question into a small market-intelligence product:
 
 ![SkillSync FastAPI endpoints](docs/screenshots/FASTAPI%20endpoints.png)
 
+### dbt Lineage
+
+![SkillSync dbt lineage](docs/screenshots/dbt_lineage.png)
+
 
 ## Architecture
 
@@ -98,6 +102,7 @@ flowchart LR
     subgraph Storage
         CSV["Processed CSV Snapshots"]
         PG["PostgreSQL Warehouse"]
+        DBT["dbt Staging + Marts"]
     end
 
     subgraph Serving
@@ -125,6 +130,8 @@ flowchart LR
     CSV --> ST
     CSV --> PBI
     CSV --> PG
+    PG --> DBT
+    DBT --> PBI
 ```
 
 ## What It Does
@@ -140,6 +147,7 @@ flowchart LR
 - Saves a history row for every pipeline run so trends can be tracked over time.
 - Runs basic data quality checks.
 - Recommends certifications for selected skills.
+- Finds current good-first-issue and help-wanted work in active GitHub repositories tagged for a selected skill.
 - Serves the processed data through Streamlit, FastAPI, PostgreSQL, and Power BI exports.
 
 ## Project Structure
@@ -147,6 +155,7 @@ flowchart LR
 ```text
 api/                  FastAPI app
 dashboard/            Streamlit dashboard
+dbt/                  PostgreSQL staging, intermediate, dimensions, facts, marts, and tests
 powerbi/              Power BI model and dashboard handoff
 docs/                 Project notes, source notes, runbook, roadmap, screenshots
 scripts/              Small local run/check scripts
@@ -159,7 +168,7 @@ src/warehouse/        PostgreSQL loader
 pipeline.py           One-time ETL run
 scheduler.py          Recurring ETL scheduler
 export_powerbi.py     Power BI CSV model export
-docker-compose.yml    Local PostgreSQL service
+docker-compose.yml    PostgreSQL, API, dashboard, pipeline, and dbt services
 ```
 
 ## Docker Quick Start
@@ -301,7 +310,7 @@ docker compose -f docker-compose.yml -f docker-compose.airflow.yml --profile air
 
 Open `http://localhost:8080`, log in with `admin` / `admin`, and trigger `skillsync_market_intel_pipeline`.
 
-The DAG runs ingest, transform, quality checks, Power BI export, and optional PostgreSQL load as separate tasks.
+The DAG runs ingestion, transformation, quality checks, PostgreSQL loading, dbt models/tests, and Power BI export in dependency order.
 ## Scheduling
 
 Use `scheduler.py` for repeated pipeline runs. The interval is controlled by `MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES` in `.env`, and logs are written to `logs/scheduler.log`.
@@ -317,7 +326,7 @@ python -m unittest discover -s tests
 python scripts\smoke_check.py
 ```
 
-The tests cover parser behavior, YouTube fallback records, and core skill extraction.
+The tests cover ingestion, skill extraction, scoring, source confidence, O*NET evidence, data quality, and Power BI star-schema relationships.
 
 ## FastAPI
 
@@ -329,7 +338,7 @@ Start the API with:
 
 Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
 
-Main endpoints include `/health`, `/kpis`, `/skill-gaps`, `/skill-trends`, `/jobs`, `/courses`, `/certifications`, `/quality`, and `/sources`.
+Main endpoints include `/health`, `/kpis`, `/skill-gaps`, `/skill-trends`, `/jobs`, `/courses`, `/certifications`, `/practice-projects`, `/quality`, and `/sources`.
 
 ## Streamlit Dashboard
 
@@ -343,11 +352,39 @@ Open `http://127.0.0.1:8501/`.
 
 Dashboard pages include Overview, Trend Lab, Skills Explorer, Learning & Certification Path, Logs & Quality, and Guide.
 
+## dbt Analytics Layer
+
+The dbt project turns the pipeline tables into a tested star schema:
+
+- Staging: stg_jobs and stg_courses.
+- Intermediate: int_skill_mentions.
+- Facts: job skill mentions, course skill coverage, and skill trend history.
+- Dimensions: skill, role, location, source, and time.
+- Marts: skill opportunity, role-skill demand, and role readiness inputs.
+
+Run it against the Docker PostgreSQL warehouse:
+
+    docker compose --profile analytics run --rm dbt build
+    docker compose --profile analytics run --rm dbt docs generate
+    docker compose --profile analytics run --rm -p 8081:8080 dbt docs serve --host 0.0.0.0 --port 8080
+
+The validated build contains 14 models and 58 data tests covering nulls, uniqueness, accepted values, and relationships.
+
 ## Power BI Dashboard
 
-Run `python export_powerbi.py`, then import the CSV files from `powerbi/export/` into Power BI Desktop.
+Run `python export_powerbi.py`, then import the star-schema CSV files from `powerbi/export/` into Power BI Desktop.
 
 Dashboard build instructions, relationships, and DAX measures are documented in [powerbi/README.md](powerbi/README.md).
+
+## GitHub Practice Recommender
+
+On the Learning & Certification Path page, select one skill to find open-source work in recently active repositories tagged with that GitHub topic. Results prefer good first issue, then help wanted, and exclude pull requests.
+
+Public requests work without authentication. For a higher rate limit, add this to your local .env file:
+
+    MARKET_INTEL_GITHUB_TOKEN=your_token_here
+
+The token is optional, read only from the environment, and must not be committed. Responses are cached for 15 minutes. A live issue is a practice lead, not a guarantee that the task is still suitable or maintained.
 
 ## Data Quality Checks
 
@@ -359,6 +396,7 @@ The quality layer flags common issues before the dashboard is used, including lo
 - Live websites can change their HTML structure or access rules. The project includes sample/fallback sources so it can still run when a public source changes.
 - YouTube uses the YouTube Data API only when `MARKET_INTEL_YOUTUBE_API_KEY` is configured; otherwise it uses local YouTube learning fallback records.
 - PostgreSQL loading is optional and depends on Docker or a reachable local PostgreSQL database.
+- GitHub issues can be closed or relabeled after retrieval, and unauthenticated API access has lower rate limits.
 
 More notes are in:
 
@@ -396,8 +434,8 @@ Inputs:
 
 - `demand_score`: calculated from job postings for the current run.
 - `course_supply_score`: calculated from course listings for the current run.
-- `salary_premium_score`: calculated from salary ranges when available; otherwise it uses a simple default for that skill.
-- `growth_score`: a hand-maintained market signal until there is enough historical data for a better estimate.
+- Salary premium score uses BLS median wages for mapped occupations, then posting salary ranges or a maintained fallback.
+- Growth score uses numeric BLS employment projections for mapped occupations, then a maintained fallback.
 - `saturation_score`: a rough signal for whether the skill is crowded or more of a basic requirement.
 
 Labels:
@@ -446,6 +484,10 @@ The dashboard also has a learning page:
 - Market context for selected skills, including opportunity index, job demand, course supply, and target roles.
 
 This page is meant to answer: "If this skill looks useful, what should I study or certify in next?"
+
+## Reference data
+
+The extraction taxonomy is project-defined. Exact technology matches are checked against O*NET Software Skills 30.3 and separated from broader occupation mappings. BLS supplies wage and employment-projection inputs. See [docs/methodology.md](docs/methodology.md) for definitions, limitations, source links, and attribution.
 
 ## Roadmap
 

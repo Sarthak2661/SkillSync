@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     adzuna_app_key: str | None = None
     adzuna_country: str = "us"
     job_api_source_limit: int = 25
+    github_token: str | None = None
+    github_repository_limit: int = 5
+    github_cache_minutes: int = 15
+    github_updated_within_days: int = 180
     schedule_interval_minutes: int = 60
     scheduler_run_on_start: bool = True
 

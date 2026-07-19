@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import subprocess
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -72,6 +73,20 @@ def postgres_load_task(**context) -> str:
     return warehouse_status
 
 
+def dbt_build_task() -> None:
+    subprocess.run(
+        [
+            "dbt",
+            "build",
+            "--project-dir",
+            "dbt",
+            "--profiles-dir",
+            "dbt",
+        ],
+        check=True,
+    )
+
+
 with DAG(
     dag_id="skillsync_market_intel_pipeline",
     default_args=DEFAULT_ARGS,
@@ -86,5 +101,6 @@ with DAG(
     quality = PythonOperator(task_id="quality_checks", python_callable=quality_task)
     export_powerbi = PythonOperator(task_id="export_powerbi_files", python_callable=export_powerbi_files)
     postgres_load = PythonOperator(task_id="optional_postgresql_load", python_callable=postgres_load_task)
+    dbt_build = PythonOperator(task_id="dbt_build_and_test", python_callable=dbt_build_task)
 
-    ingest >> transform >> quality >> export_powerbi >> postgres_load
+    ingest >> transform >> quality >> postgres_load >> dbt_build >> export_powerbi

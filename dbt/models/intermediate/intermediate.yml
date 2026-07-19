@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_skill_mentions
+    description: Shared job and course skill mentions at one record-skill grain.
+    columns:
+      - name: mention_key
+        tests: [not_null, unique]
+      - name: mention_type
+        tests:
+          - accepted_values:
+              values: [job, course]
+      - name: skill
+        tests: [not_null]

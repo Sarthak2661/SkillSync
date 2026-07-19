@@ -6,6 +6,7 @@ x-skillsync-env: &skillsync-env
   MARKET_INTEL_COURSE_SOURCE_LIMIT: "${MARKET_INTEL_COURSE_SOURCE_LIMIT:-200}"
   MARKET_INTEL_JOB_API_SOURCE_LIMIT: "${MARKET_INTEL_JOB_API_SOURCE_LIMIT:-25}"
   MARKET_INTEL_YOUTUBE_API_KEY: "${MARKET_INTEL_YOUTUBE_API_KEY:-}"
+  MARKET_INTEL_GITHUB_TOKEN: "${MARKET_INTEL_GITHUB_TOKEN:-}"
   MARKET_INTEL_ADZUNA_APP_ID: "${MARKET_INTEL_ADZUNA_APP_ID:-}"
   MARKET_INTEL_ADZUNA_APP_KEY: "${MARKET_INTEL_ADZUNA_APP_KEY:-}"
   MARKET_INTEL_ADZUNA_COUNTRY: "${MARKET_INTEL_ADZUNA_COUNTRY:-us}"
@@ -47,6 +48,27 @@ services:
     container_name: skillsync-pipeline-init
     command: sh -c "python pipeline.py && python export_powerbi.py"
     restart: "no"
+
+
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbt
+    container_name: skillsync-dbt
+    profiles: ["analytics"]
+    environment:
+      DBT_POSTGRES_HOST: postgres
+      DBT_POSTGRES_PORT: "5432"
+      DBT_POSTGRES_USER: postgres
+      DBT_POSTGRES_PASSWORD: postgres
+      DBT_POSTGRES_DB: job_market_intel
+      DBT_PROFILES_DIR: /app/dbt
+    volumes:
+      - ./dbt:/app/dbt
+    command: ["build"]
+    depends_on:
+      pipeline-init:
+        condition: service_completed_successfully
 
   api:
     <<: *skillsync-app

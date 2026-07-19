@@ -35,3 +35,13 @@ SkillSync uses official APIs for current records and curated local data for repe
 The default `all` job mode now uses official APIs plus curated local job records. YC and RealPython remain available as optional modes for comparison and parser testing, but they are not the preferred source path.
 
 Some large job and learning platforms restrict scraping or require authentication. For those, I would rather use an official API, public dataset, or manual export than scrape pages against their terms.
+
+## GitHub practice issues
+
+The practice recommender uses the official GitHub REST API. It first searches recently updated public repositories by an exact GitHub topic, then lists open issues labeled good first issue or help wanted. Pull requests are removed from the result.
+
+Every returned row is labeled live_verified because it comes directly from GitHub's public API. This describes source provenance, not issue quality or suitability. Repository maintainers can close, relabel, or change issues at any time.
+
+Unauthenticated access works for public data but has lower rate limits. Set MARKET_INTEL_GITHUB_TOKEN to use authenticated requests. Tokens are read from the environment and must never be committed.
+
+Official references: https://docs.github.com/en/rest/search/search and https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api

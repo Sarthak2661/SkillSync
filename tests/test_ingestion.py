@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from src.ingestion.course_sources import YouTubeLearningSource
+import requests
+
+from src.ingestion.course_sources import CompositeCourseSource, YouTubeLearningSource
 from src.ingestion.job_sources import (
     AdzunaJobsSource,
     ArbeitnowJobsSource,
@@ -11,6 +13,17 @@ from src.ingestion.job_sources import (
 )
 
 class ParserTests(unittest.TestCase):
+    def test_composite_course_source_continues_after_network_failure(self):
+        unavailable = Mock()
+        unavailable.fetch.side_effect = requests.RequestException("source unavailable")
+        available = Mock()
+        available.fetch.return_value = [Mock()]
+
+        records = CompositeCourseSource([unavailable, available]).fetch()
+
+        self.assertEqual(len(records), 1)
+        available.fetch.assert_called_once_with()
+
     def test_parse_realpython_fake_jobs_card(self):
         html = """
         <div class="card-content">

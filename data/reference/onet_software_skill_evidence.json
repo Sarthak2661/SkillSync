@@ -1,0 +1,328 @@
+{
+  "source": "https://www.onetcenter.org/dl_files/database/db_30_3_json/software_skills.json",
+  "database_version": "30.3",
+  "license": "CC BY 4.0",
+  "attribution": "O*NET 30.3 Database, U.S. Department of Labor, Employment and Training Administration",
+  "records": [
+    {
+      "skill": "AWS",
+      "workplace_example": "Amazon Web Services AWS software",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "AWS",
+      "workplace_example": "Amazon Web Services AWS software",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Airflow",
+      "workplace_example": "Apache Airflow",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "Airflow",
+      "workplace_example": "Apache Airflow",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "Azure",
+      "workplace_example": "Microsoft Azure software",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Azure",
+      "workplace_example": "Microsoft Azure software",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Docker",
+      "workplace_example": "Docker",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "Docker",
+      "workplace_example": "Docker",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Excel",
+      "workplace_example": "Microsoft Excel",
+      "soc_code": "13-1111.00",
+      "occupation": "Management Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Excel",
+      "workplace_example": "Microsoft Excel",
+      "soc_code": "15-2051.01",
+      "occupation": "Business Intelligence Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "GCP",
+      "workplace_example": "Google Cloud software",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": false,
+      "in_demand": false
+    },
+    {
+      "skill": "GCP",
+      "workplace_example": "Google Cloud software",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": false,
+      "in_demand": false
+    },
+    {
+      "skill": "Git",
+      "workplace_example": "Git",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Git",
+      "workplace_example": "GitHub",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Git",
+      "workplace_example": "Git",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Git",
+      "workplace_example": "GitHub",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "MySQL",
+      "workplace_example": "MySQL",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "MySQL",
+      "workplace_example": "MySQL",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "NumPy",
+      "workplace_example": "NumPy",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": false,
+      "in_demand": true
+    },
+    {
+      "skill": "PostgreSQL",
+      "workplace_example": "PostgreSQL",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "PostgreSQL",
+      "workplace_example": "PostgreSQL",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "Power BI",
+      "workplace_example": "Microsoft Power BI",
+      "soc_code": "13-1111.00",
+      "occupation": "Management Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Power BI",
+      "workplace_example": "Microsoft Power BI",
+      "soc_code": "15-2051.01",
+      "occupation": "Business Intelligence Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "PyTorch",
+      "workplace_example": "PyTorch",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "PyTorch",
+      "workplace_example": "PyTorch",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Python",
+      "workplace_example": "Python",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Python",
+      "workplace_example": "Python",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "SQL Server",
+      "workplace_example": "Microsoft SQL Server",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "SQL Server",
+      "workplace_example": "Microsoft SQL Server",
+      "soc_code": "15-2051.01",
+      "occupation": "Business Intelligence Analysts",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "Snowflake",
+      "workplace_example": "Snowflake",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Snowflake",
+      "workplace_example": "Snowflake",
+      "soc_code": "15-2051.01",
+      "occupation": "Business Intelligence Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Spark",
+      "workplace_example": "Apache Spark",
+      "soc_code": "15-1243.00",
+      "occupation": "Database Architects",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Spark",
+      "workplace_example": "Apache Spark",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Spark",
+      "workplace_example": "PySpark",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": false,
+      "in_demand": false
+    },
+    {
+      "skill": "Tableau",
+      "workplace_example": "Tableau",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "Tableau",
+      "workplace_example": "Tableau",
+      "soc_code": "15-2051.01",
+      "occupation": "Business Intelligence Analysts",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "TensorFlow",
+      "workplace_example": "TensorFlow",
+      "soc_code": "15-1252.00",
+      "occupation": "Software Developers",
+      "hot_technology": true,
+      "in_demand": false
+    },
+    {
+      "skill": "TensorFlow",
+      "workplace_example": "TensorFlow",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": true,
+      "in_demand": true
+    },
+    {
+      "skill": "pandas",
+      "workplace_example": "pandas",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": false,
+      "in_demand": true
+    },
+    {
+      "skill": "scikit-learn",
+      "workplace_example": "Scikit-learn",
+      "soc_code": "15-2051.00",
+      "occupation": "Data Scientists",
+      "hot_technology": false,
+      "in_demand": true
+    }
+  ]
+}

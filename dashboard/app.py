@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.etl.io import read_all_dataframes, read_latest_dataframe  # noqa: E402
 from src.etl.transform import build_skill_gap_summary  # noqa: E402
 from src.analytics.certifications import build_certification_recommendations  # noqa: E402
+from src.analytics.github_practice import recommend_practice_projects  # noqa: E402
 from src.analytics.source_confidence import (  # noqa: E402
     SOURCE_VIEW_OPTIONS,
     add_source_confidence,
@@ -615,9 +616,12 @@ def render_overview(data: dict[str, pd.DataFrame]) -> None:
         "job_demand",
         "course_supply",
         "target_job_roles",
+        "onet_evidence_status",
+        "onet_workplace_examples",
         "onet_soc_codes",
         "onet_wage_median_annual",
         "onet_growth_outlook",
+        "bls_growth_percent",
     ]
     st.dataframe(gaps[columns].head(15), width="stretch", hide_index=True)
 
@@ -726,6 +730,20 @@ def render_explorer(data: dict[str, pd.DataFrame]) -> None:
         st.dataframe(selected_gap[[col for col in score_cols if col in selected_gap]], width="stretch", hide_index=True)
 
 
+@st.cache_data(ttl=900, show_spinner=False)
+def load_practice_projects(skill: str, limit: int = 8) -> dict[str, object]:
+    result = recommend_practice_projects(skill=skill, limit=limit)
+    return {
+        "items": result.items,
+        "topic": result.topic,
+        "status": result.status,
+        "message": result.message,
+        "authenticated": result.authenticated,
+        "rate_limit_remaining": result.rate_limit_remaining,
+        "fetched_at": result.fetched_at,
+    }
+
+
 def render_learning_path(data: dict[str, pd.DataFrame]) -> None:
     certifications = data["certifications"].copy()
     courses = data["courses"].copy()
@@ -777,6 +795,46 @@ def render_learning_path(data: dict[str, pd.DataFrame]) -> None:
     course_cols = ["title", "platform", "level", "duration_minutes", "skills", "url"]
     st.dataframe(course_filter[[col for col in course_cols if col in course_filter]].head(50), width="stretch", hide_index=True)
 
+
+    st.markdown('<div class="section-spacer"></div>', unsafe_allow_html=True)
+    st.markdown("#### Practice This Skill On GitHub")
+    practice_choices = selected_skills or skill_options
+    practice_skill = st.selectbox(
+        "Practice skill",
+        practice_choices,
+        help="Find open issues in recently updated repositories tagged with this skill.",
+    )
+    with st.spinner("Looking for current beginner-friendly issues..."):
+        practice = load_practice_projects(practice_skill)
+    if practice["status"] != "ok":
+        st.warning(str(practice["message"]))
+    else:
+        practice_items = pd.DataFrame(practice["items"])
+        auth_label = "token authenticated" if practice["authenticated"] else "public unauthenticated access"
+        remaining = practice["rate_limit_remaining"]
+        rate_note = f" | search requests remaining: {remaining}" if remaining is not None else ""
+        st.caption(
+            f"GitHub topic: {practice['topic']} | {auth_label}{rate_note} | fetched {practice['fetched_at']}"
+        )
+        if practice_items.empty:
+            st.info(str(practice["message"]))
+        else:
+            practice_cols = [
+                "repository",
+                "issue_title",
+                "practice_label",
+                "language",
+                "stars",
+                "issue_updated_at",
+                "issue_url",
+            ]
+            st.dataframe(
+                practice_items[[col for col in practice_cols if col in practice_items]],
+                width="stretch",
+                hide_index=True,
+                column_config={"issue_url": st.column_config.LinkColumn("Open issue")},
+            )
+
     st.markdown('<div class="section-spacer"></div>', unsafe_allow_html=True)
     st.markdown("#### Market Context For Selected Skills")
     if selected_skills and "skill" in gaps:
@@ -819,7 +877,7 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
 
         **Target roles** map each skill to likely job titles.
 
-        **Learning & Certification Path** shows courses, videos, and certifications for the selected skills.
+        **Learning & Certification Path** shows courses, certifications, and live GitHub issues where a selected skill can be practiced.
         """
     )
 

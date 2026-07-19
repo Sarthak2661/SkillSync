@@ -1,215 +1,74 @@
-﻿# Power BI Dashboard Package
-
-This folder contains the Power BI handoff for SkillSync.
-
-Run the ETL first:
-
-```powershell
-python pipeline.py
-```
-
-Then export Power BI-ready tables:
-
-```powershell
-python export_powerbi.py
-```
-
-The export writes CSV tables to `powerbi/export/`.
-
-## Import Tables
-
-In Power BI Desktop:
-
-1. Select **Get Data > Text/CSV**.
-2. Import every CSV in `powerbi/export/`.
-3. Set relationships:
-   - `dim_skill[skill]` one-to-many `fact_skill_gap[skill]`
-   - `dim_skill[skill]` one-to-many `fact_skill_trend[skill]`
-   - `dim_skill[skill]` one-to-many `bridge_job_skills[skill]`
-   - `dim_skill[skill]` one-to-many `bridge_course_skills[skill]`
-   - `fact_jobs[job_id]` one-to-many `bridge_job_skills[job_id]`
-   - `fact_courses[course_id]` one-to-many `bridge_course_skills[course_id]`
-   - `dim_company[company]` one-to-many `fact_jobs[company]`
-   - `dim_platform[platform]` one-to-many `fact_courses[platform]`
-   - `dim_skill[skill]` one-to-many `fact_certification_recommendations[skill]`
-
-Use single-direction filtering from dimensions to facts/bridges.
-
-## Core Measures
-
-Create these DAX measures:
-
-```DAX
-Job Postings = COUNTROWS(fact_jobs)
-
-Course Listings = COUNTROWS(fact_courses)
-
-Unique Skills = DISTINCTCOUNT(dim_skill[skill])
-
-Historical Runs = DISTINCTCOUNT(fact_skill_trend[run_id])
-
-High Opportunity Skills =
-CALCULATE(
-    DISTINCTCOUNT(fact_skill_gap[skill]),
-    fact_skill_gap[status] = "High opportunity"
-)
-
-High Value Skills =
-CALCULATE(
-    DISTINCTCOUNT(fact_skill_gap[skill]),
-    fact_skill_gap[opportunity_label] = "High-value"
-)
-
-Average Opportunity Index = AVERAGE(fact_skill_gap[opportunity_index])
-
-Average Gap Score = AVERAGE(fact_skill_gap[gap_score])
-
-Trend Job Count = SUM(fact_skill_trend[job_count])
-
-Trend Course Count = SUM(fact_skill_trend[course_count])
-
-Average Skill Salary Min = AVERAGE(fact_skill_trend[salary_min_avg])
-
-Average Skill Salary Max = AVERAGE(fact_skill_trend[salary_max_avg])
-
-Quality Warnings =
-CALCULATE(
-    COUNTROWS(fact_quality_checks),
-    fact_quality_checks[status] <> "pass"
-)
-
-Job Skill Coverage =
-DIVIDE(
-    CALCULATE(COUNTROWS(fact_jobs), fact_jobs[skill_count] > 0),
-    COUNTROWS(fact_jobs)
-)
-
-Course Skill Coverage =
-DIVIDE(
-    CALCULATE(COUNTROWS(fact_courses), fact_courses[skill_count] > 0),
-    COUNTROWS(fact_courses)
-)
-
-Certification Recommendations = COUNTROWS(fact_certification_recommendations)
-
-Free Certifications =
-CALCULATE(
-    COUNTROWS(fact_certification_recommendations),
-    fact_certification_recommendations[free_or_paid] = "Free"
-)
-
-Average Certification Recommendation Score =
-AVERAGE(fact_certification_recommendations[recommendation_score])
-```
-
-## Dashboard Pages
-
-### Page 1: Executive Overview
-
-Cards:
-
-- Job Postings
-- Course Listings
-- Unique Skills
-- High Opportunity Skills
-- High Value Skills
-- Average Opportunity Index
-- Historical Runs
-- Quality Warnings
-
-Charts:
-
-- Bar chart: `dim_skill[skill]` by `fact_skill_gap[opportunity_index]`, sorted descending.
-- Clustered bar: `dim_skill[category]` by job demand and course supply.
-- Table: `fact_quality_checks[check_name]`, `status`, `severity`, `message`.
-
-Filters:
-
-- Skill category
-- Gap status
-- Run ID
-
-### Page 2: Skill Gap Explorer
-
-Charts:
-
-- Scatter: `job_demand` vs `course_supply`, legend by `category`.
-- Matrix: skill, category, opportunity index, opportunity label, job demand, course supply, growth score, salary premium score, saturation score.
-- Bar chart: top high-opportunity skills.
-
-Use conditional formatting on `opportunity_index`:
-
-- 75 and above: high-value color
-- 60 to 74: good-bet color
-- 45 to 59: neutral color
-- Below 45: lower-priority color
-
-### Page 3: Jobs And Courses Detail
-
-Tables:
-
-- Job postings with title, company, location, remote type, skills, URL.
-- Courses with title, platform, level, duration, skills, URL.
-
-Filters:
-
-- Skill
-- Company
-- Platform
-- Remote type
-- Level
-
-### Page 4: Skill Trends
-
-Charts:
-
-- Line chart: `fact_skill_trend[run_timestamp]` by `Trend Job Count`, legend by `dim_skill[skill]`.
-- Line chart: cloud comparison for AWS, Azure, and GCP.
-- Line chart: BI comparison for Power BI and Tableau.
-- Clustered column: `role_category` by `Trend Job Count`.
-- Matrix: skill, source name, location, role category, job count, course count, average salary min, average salary max.
-
-Filters:
-
-- Skill
-- Source name
-- Location
-- Role category
-- Run timestamp
-
-### Page 5: Data Quality
-
-Cards:
-
-- Quality Warnings
-- Failed checks
-- Warning checks
-
-Charts:
-
-- Bar chart: checks by status and severity.
-- Table: dataset, check name, severity, failed count, message.
-
-Add a text note:
-
-> Trend claims should be interpreted with the quality checks and source coverage shown on this page.
-
-### Page 6: Learning And Certification Path
-
-Cards:
-
-- Certification Recommendations
-- Free Certifications
-- Average Certification Recommendation Score
-
-Tables:
-
-- Certification recommendations with skill, certification name, provider, level, free/paid status, cost, target roles, opportunity index, and recommendation score.
-- Related course resources from `fact_courses`, filtered by selected skill.
-
-Filters:
-
-- Skill
-- Free or paid
-- Provider
-
+# Power BI Star Schema
+
+Run python pipeline.py, then python export_powerbi.py. Import the CSV files from powerbi/export.
+
+Use the three facts, five dimensions, and three marts as the reporting model. fact_jobs and fact_courses remain available for drill-through detail.
+
+## Relationships
+
+Create one-to-many, single-direction relationships from dimensions to facts:
+
+| Dimension | Key | Fact or mart |
+|---|---|---|
+| dim_skill | skill_key | All three facts and all three marts |
+| dim_role | role_key | Job mentions, trend history, role demand, readiness |
+| dim_location | location_key | Job mentions and trend history |
+| dim_source | source_key | All three facts |
+| dim_time | time_key | All three facts and role demand |
+
+Do not create direct fact-to-fact relationships.
+
+## Core DAX measures
+
+    Skill Demand Score =
+    VAR Mentions = SUM(fact_job_skill_mentions[mention_count])
+    VAR MaximumSkillMentions =
+        MAXX(ALL(dim_skill[skill]), CALCULATE(SUM(fact_job_skill_mentions[mention_count])))
+    RETURN ROUND(100 * DIVIDE(Mentions, MaximumSkillMentions, 0), 0)
+
+    Skill Supply Score =
+    VAR Coverage = SUM(fact_course_skill_coverage[coverage_count])
+    VAR MaximumSkillCoverage =
+        MAXX(ALL(dim_skill[skill]), CALCULATE(SUM(fact_course_skill_coverage[coverage_count])))
+    RETURN ROUND(100 * DIVIDE(Coverage, MaximumSkillCoverage, 0), 0)
+
+    Opportunity Index =
+    AVERAGE(mart_skill_opportunity[opportunity_index])
+
+    High-Confidence Demand Only =
+    CALCULATE(
+        SUM(fact_job_skill_mentions[mention_count]),
+        fact_job_skill_mentions[high_confidence_demand] = 1
+    )
+
+    Rising Skills Count =
+    VAR CurrentRun = MAX(dim_time[run_timestamp])
+    VAR PreviousRun =
+        MAXX(FILTER(ALL(dim_time), dim_time[run_timestamp] < CurrentRun), dim_time[run_timestamp])
+    RETURN
+    COUNTROWS(
+        FILTER(
+            VALUES(dim_skill[skill_key]),
+            VAR CurrentDemand =
+                CALCULATE(SUM(fact_skill_trend_history[job_count]), dim_time[run_timestamp] = CurrentRun)
+            VAR PreviousDemand =
+                CALCULATE(SUM(fact_skill_trend_history[job_count]), dim_time[run_timestamp] = PreviousRun)
+            RETURN CurrentDemand > PreviousDemand
+        )
+    )
+
+## Suggested pages
+
+1. Market Overview: demand, supply, opportunity index, high-confidence demand, and rising skills.
+2. Role Demand: role-by-skill matrix from mart_role_skill_demand.
+3. Learning Readiness: readiness gap from mart_role_readiness_inputs.
+4. Trend History: skill demand over dim_time[run_timestamp].
+5. Methodology and Quality: source confidence, O*NET evidence, and quality results.
+
+## dbt commands
+
+    docker compose --profile analytics run --rm dbt build
+    docker compose --profile analytics run --rm dbt docs generate
+    docker compose --profile analytics run --rm -p 8081:8080 dbt docs serve --host 0.0.0.0 --port 8080
+
+Open http://127.0.0.1:8081 for generated model documentation and interactive lineage.

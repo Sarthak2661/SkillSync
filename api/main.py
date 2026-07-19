@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from fastapi import FastAPI, Query
@@ -19,13 +20,14 @@ from src.analytics.model import (
     skill_profile,
     source_summary,
 )
+from src.analytics.github_practice import recommend_practice_projects
 from src.etl.io import latest_processed_file
 
 
 app = FastAPI(
     title="SkillSync API",
-    description="API for the latest jobs, courses, skill gaps, trend rows, and quality checks.",
-    version="0.2.0",
+    description="API for market demand, learning paths, practice issues, trends, and quality checks.",
+    version="0.3.0",
 )
 
 
@@ -46,6 +48,7 @@ def root() -> dict[str, object]:
             "/courses",
             "/quality",
             "/certifications",
+            "/practice-projects",
             "/sources",
             "/datasets",
         ],
@@ -163,6 +166,15 @@ def certifications(
     if "recommendation_score" in df:
         df = df.sort_values("recommendation_score", ascending=False)
     return dataframe_to_records(df.head(limit))
+
+
+@app.get("/practice-projects")
+def practice_projects(
+    skill: str = Query(..., min_length=1, description="Skill topic, such as dbt or Airflow."),
+    limit: int = Query(8, ge=1, le=20),
+) -> dict[str, Any]:
+    """Return recently updated, beginner-friendly issues from skill-tagged GitHub repositories."""
+    return asdict(recommend_practice_projects(skill=skill, limit=limit))
 
 
 @app.get("/quality")

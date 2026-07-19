@@ -32,3 +32,8 @@ powerbi/export/
 logs/
 *.log
 airflow/logs/
+
+# dbt build artifacts
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/

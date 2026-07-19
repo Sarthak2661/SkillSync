@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_jobs
+    description: One cleaned row per job posting and pipeline run.
+    columns:
+      - name: job_key
+        tests: [not_null, unique]
+      - name: run_id
+        tests: [not_null]
+      - name: source_confidence
+        tests:
+          - accepted_values:
+              values: [live_verified, live_broad, curated_demo, fallback_learning, test_source]
+  - name: stg_courses
+    description: One cleaned row per learning resource and pipeline run.
+    columns:
+      - name: course_key
+        tests: [not_null, unique]
+      - name: run_id
+        tests: [not_null]
+      - name: source_confidence
+        tests:
+          - accepted_values:
+              values: [live_verified, live_broad, curated_demo, fallback_learning, test_source]

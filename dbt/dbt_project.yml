@@ -1,0 +1,21 @@
+name: skillsync_analytics
+version: 1.0.0
+config-version: 2
+profile: skillsync
+
+model-paths: [models]
+macro-paths: [macros]
+target-path: target
+clean-targets: [target, dbt_packages]
+
+models:
+  skillsync_analytics:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: analytics

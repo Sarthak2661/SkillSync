@@ -107,8 +107,8 @@ Inputs:
 | --- | --- |
 | `demand_score` | Normalized job demand for the selected run or dashboard source view. |
 | `course_supply_score` | Normalized course/resource supply for the selected run or source view. |
-| `growth_score` | Uses O*NET occupation outlook when mapped; otherwise falls back to a maintained project signal. |
-| `salary_premium_score` | Uses O*NET annual median wage references when mapped; otherwise falls back to posting salary ranges or a maintained project signal. |
+| Growth score | Numeric BLS employment projection for mapped occupations; maintained fallback otherwise. |
+| Salary premium score | BLS median wage for mapped occupations; posting salary or maintained fallback otherwise. |
 | `saturation_score` | Maintained signal for whether a skill is crowded, basic, or more specialized. |
 
 Labels:
@@ -138,3 +138,22 @@ Avoid overclaiming:
 - Do not claim precise wage premium for a specific employer or city; O*NET is an occupational benchmark, not a live compensation offer.
 
 The dashboard includes source filters and quality checks so these caveats are visible instead of hidden.
+
+## O*NET and BLS reference data
+
+SkillSync's tracked labels are a project-defined extraction taxonomy, not the complete O*NET taxonomy.
+
+An exact technology match in the O*NET Software Skills file receives the evidence status software_skill_verified and retains the official workplace-example label. Broader concepts such as ETL, data quality, and responsible AI receive occupation_mapping_only. Those links are documented project mappings, not exact O*NET software-skill assertions.
+
+O*NET supplies occupation codes and software-skill evidence. BLS supplies wages and numeric employment projections. Refresh the compact reference snapshot with:
+
+    python scripts/refresh_onet_reference.py
+
+O*NET data is licensed under CC BY 4.0. Attribution: O*NET 30.3 Database, U.S. Department of Labor, Employment and Training Administration. SkillSync filters and maps the source records.
+
+
+## Practice recommendation method
+
+Practice recommendations are live operational suggestions, not part of the Skill Opportunity Index. The recommender searches public repositories with an exact GitHub topic and recent code activity, ranks established repositories by stars, and retrieves open issues labeled good first issue or help wanted. Pull requests are excluded.
+
+The repository topic provides the skill connection. The issue label indicates maintainer intent, but it does not prove that the issue is easy, unclaimed, or still appropriate for a new contributor. Users should read the repository contribution guide and issue discussion before starting work.

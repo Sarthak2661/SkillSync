@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: market_intel
+    description: Pipeline outputs loaded by SkillSync before dbt runs.
+    schema: market_intel
+    tables:
+      - name: job_postings
+      - name: course_listings
+      - name: skill_gap_summary
+      - name: skill_trend_history

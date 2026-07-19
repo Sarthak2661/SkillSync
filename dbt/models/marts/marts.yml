@@ -1,0 +1,172 @@
+version: 2
+
+models:
+  - name: dim_skill
+    description: Conformed skill dimension using the latest taxonomy attributes.
+    columns:
+      - name: skill_key
+        tests: [not_null, unique]
+      - name: skill
+        tests: [not_null, unique]
+      - name: onet_evidence_status
+        tests:
+          - accepted_values:
+              values: [software_skill_verified, occupation_mapping_only, project_fallback]
+  - name: dim_role
+    description: Conformed data-role category dimension.
+    columns:
+      - name: role_key
+        tests: [not_null, unique]
+      - name: role_name
+        tests: [not_null, unique]
+  - name: dim_location
+    description: Conformed job-market location dimension.
+    columns:
+      - name: location_key
+        tests: [not_null, unique]
+  - name: dim_source
+    description: Source catalog with confidence classification.
+    columns:
+      - name: source_key
+        tests: [not_null, unique]
+      - name: source_confidence
+        tests:
+          - accepted_values:
+              values: [live_verified, live_broad, curated_demo, fallback_learning, test_source]
+  - name: dim_time
+    description: Pipeline-run time dimension for historical analysis.
+    columns:
+      - name: time_key
+        tests: [not_null, unique]
+      - name: run_id
+        tests: [not_null, unique]
+
+  - name: fact_job_skill_mentions
+    description: One row for each skill extracted from a job posting.
+    columns:
+      - name: job_skill_mention_key
+        tests: [not_null, unique]
+      - name: skill_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key
+      - name: role_key
+        tests:
+          - relationships:
+              to: ref('dim_role')
+              field: role_key
+      - name: location_key
+        tests:
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: source_key
+        tests:
+          - relationships:
+              to: ref('dim_source')
+              field: source_key
+      - name: time_key
+        tests:
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+      - name: high_confidence_demand
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: fact_course_skill_coverage
+    description: One row for each skill covered by a learning resource.
+    columns:
+      - name: course_skill_coverage_key
+        tests: [not_null, unique]
+      - name: skill_key
+        tests:
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key
+      - name: source_key
+        tests:
+          - relationships:
+              to: ref('dim_source')
+              field: source_key
+      - name: time_key
+        tests:
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+
+  - name: fact_skill_trend_history
+    description: Historical demand and supply snapshot by skill, role, source, location, and run.
+    columns:
+      - name: skill_trend_key
+        tests: [not_null, unique]
+      - name: skill_key
+        tests:
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key
+      - name: role_key
+        tests:
+          - relationships:
+              to: ref('dim_role')
+              field: role_key
+      - name: location_key
+        tests:
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: source_key
+        tests:
+          - relationships:
+              to: ref('dim_source')
+              field: source_key
+      - name: time_key
+        tests:
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+
+  - name: mart_skill_opportunity
+    description: Skill demand, supply, growth, salary, saturation, and opportunity metrics.
+    columns:
+      - name: skill_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key
+      - name: opportunity_label
+        tests:
+          - accepted_values:
+              values: [High-value, Good bet, Balanced, Lower priority]
+
+  - name: mart_role_skill_demand
+    description: Aggregated demand and salary signals by role, skill, and run.
+    columns:
+      - name: role_key
+        tests:
+          - relationships:
+              to: ref('dim_role')
+              field: role_key
+      - name: skill_key
+        tests:
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key
+
+  - name: mart_role_readiness_inputs
+    description: Role-skill demand compared with available course coverage.
+    columns:
+      - name: role_key
+        tests:
+          - relationships:
+              to: ref('dim_role')
+              field: role_key
+      - name: skill_key
+        tests:
+          - relationships:
+              to: ref('dim_skill')
+              field: skill_key

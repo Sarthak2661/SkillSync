@@ -38,7 +38,7 @@ from src.etl.transform import build_skill_gap_summary
 app = FastAPI(
     title="SkillSync API",
     description="API for market demand, learning paths, practice issues, trends, and quality checks.",
-    version="0.4.0",
+    version="2.0.0",
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

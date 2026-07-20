@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
+  "pageOrder": [
+    "market_overview",
+    "role_demand",
+    "learning_readiness",
+    "trend_history",
+    "methodology_quality"
+  ],
+  "activePageName": "methodology_quality"
+}

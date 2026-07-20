@@ -17,6 +17,7 @@ class PowerBiStarSchemaTests(unittest.TestCase):
             "jobs": pd.DataFrame([{
                 "external_id": "job-1", "source_name": "test_jobs", "source_confidence": "test_source",
                 "title": "Data Engineer", "location": "Remote", "skills": "Python|SQL",
+                "role_category": "Data Engineer", "role_family": "Data & Analytics",
                 "skill_confidence": "high",
             }]),
             "courses": pd.DataFrame([{
@@ -34,6 +35,7 @@ class PowerBiStarSchemaTests(unittest.TestCase):
             "run_id": "20260719_120000", "run_timestamp": "2026-07-19T12:00:00Z",
             "source_name": "test_jobs", "skill": "SQL", "location": "Remote",
             "role_category": "Data Engineer", "job_count": 1, "course_count": 1,
+            "role_family": "Data & Analytics",
             "salary_min_avg": 90000, "salary_max_avg": 120000,
         }])
 
@@ -64,6 +66,8 @@ class PowerBiStarSchemaTests(unittest.TestCase):
             ]:
                 self.assertFalse(tables[dimension][key].isna().any())
                 self.assertFalse(tables[dimension][key].duplicated().any())
+            self.assertEqual(tables["dim_role"]["role_family"].tolist(), ["Data & Analytics"])
+
 
             facts = [
                 ("fact_job_skill_mentions", "skill_key", "dim_skill"),

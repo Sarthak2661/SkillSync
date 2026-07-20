@@ -1,0 +1,111 @@
+relationship 2e8d14de-31f6-485b-a5e7-8a4b313b591e
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_skill_trend_history.run_timestamp
+	toColumn: LocalDateTable_0ad3e36f-ddc4-4f42-8636-b9378afb02e0.Date
+
+relationship 44421a4e-b79a-4864-9cbc-82c1b03a64ad
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_time.run_timestamp
+	toColumn: LocalDateTable_f321bc47-1436-40de-a737-05f9c4a5dd55.Date
+
+relationship be24e38b-a7dc-4a22-bd57-dbf98cf0b209
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_courses.last_modified
+	toColumn: LocalDateTable_43ea2555-7b42-493e-a1fa-8930ea0402fd.Date
+
+relationship 5eb5acf7-89f2-4529-8e2e-5b55a07b541d
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_courses.collected_at
+	toColumn: LocalDateTable_f5e327e5-e061-458d-9954-d047dccfff3f.Date
+
+relationship 89d80bc0-10fc-4469-a176-733585b75cdf
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_certification_recommendations.last_verified
+	toColumn: LocalDateTable_895a972f-f61c-4cc3-b2c3-4aaa3a3e5da5.Date
+
+relationship 7d1128c8-fe66-446c-90a6-2943fa01cdb8
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_jobs.posted_at
+	toColumn: LocalDateTable_761a5258-9aff-4463-aedc-a2e3ee10c31d.Date
+
+relationship 3ecf7ed9-3465-44ac-8fc3-835bbdd5237c
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_jobs.collected_at
+	toColumn: LocalDateTable_30604796-5bdf-4f76-ac66-a057edc1046a.Date
+
+relationship 1aa636fd-ac3f-e210-cc86-ca8c7b18947f
+	fromColumn: fact_job_skill_mentions.time_key
+	toColumn: dim_time.time_key
+
+relationship ba867c43-30da-225e-4d51-91fa67f5b708
+	fromColumn: fact_course_skill_coverage.time_key
+	toColumn: dim_time.time_key
+
+relationship 1cbbf975-1d3c-0c0d-950b-94660a6a6364
+	fromColumn: fact_skill_trend_history.time_key
+	toColumn: dim_time.time_key
+
+relationship c353bd5c-43cb-5754-7713-24d4a22b121f
+	fromColumn: mart_role_skill_demand.time_key
+	toColumn: dim_time.time_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791101
+	fromColumn: fact_job_skill_mentions.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791102
+	fromColumn: fact_course_skill_coverage.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791103
+	fromColumn: fact_skill_trend_history.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791104
+	fromColumn: mart_skill_opportunity.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791105
+	fromColumn: mart_role_skill_demand.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791106
+	fromColumn: mart_role_readiness_inputs.skill_key
+	toColumn: dim_skill.skill_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791107
+	fromColumn: fact_job_skill_mentions.role_key
+	toColumn: dim_role.role_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791108
+	fromColumn: fact_skill_trend_history.role_key
+	toColumn: dim_role.role_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791109
+	fromColumn: mart_role_skill_demand.role_key
+	toColumn: dim_role.role_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791110
+	fromColumn: mart_role_readiness_inputs.role_key
+	toColumn: dim_role.role_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791111
+	fromColumn: fact_job_skill_mentions.location_key
+	toColumn: dim_location.location_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791112
+	fromColumn: fact_skill_trend_history.location_key
+	toColumn: dim_location.location_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791113
+	fromColumn: fact_job_skill_mentions.source_key
+	toColumn: dim_source.source_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791114
+	fromColumn: fact_course_skill_coverage.source_key
+	toColumn: dim_source.source_key
+
+relationship 0e21bbf1-7745-4f9c-9a36-404712791115
+	fromColumn: fact_skill_trend_history.source_key
+	toColumn: dim_source.source_key
+

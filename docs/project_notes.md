@@ -6,7 +6,7 @@ These notes explain the choices that are easy to miss when reading the code.
 
 Live APIs make the dataset current, but their coverage changes from run to run. Curated records keep demos, tests, and screenshots repeatable. The dashboard exposes both through source modes instead of presenting them as equivalent evidence.
 
-YC Jobs and RealPython Fake Jobs remain optional parser sources. The default live path uses documented APIs from Adzuna, Arbeitnow, and Remotive.
+The live job path uses documented APIs from Adzuna, Arbeitnow, Remotive, and HN Algolia. HTML job-board scrapers are not part of the active source modes.
 
 ## Skill Extraction
 

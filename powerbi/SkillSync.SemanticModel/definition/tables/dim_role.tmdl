@@ -1,0 +1,42 @@
+table dim_role
+	lineageTag: 16d96c05-74d0-4c72-9a35-95f818f73a20
+
+	column role_key
+		dataType: string
+		lineageTag: b240ec48-eb7c-418e-a1c2-9380b2cf6d44
+		summarizeBy: none
+		sourceColumn: role_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_name
+		dataType: string
+		lineageTag: d45f9c05-f984-463c-9e84-dc23ee5cb5b5
+		summarizeBy: none
+		sourceColumn: role_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_family
+		dataType: string
+		lineageTag: 5d1cb001-e25f-45bc-b88a-8f2eb4314b35
+		summarizeBy: none
+		sourceColumn: role_family
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_role = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\dim_role.csv"),[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"role_key", type text}, {"role_name", type text}, {"role_family", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -6,18 +6,20 @@ import pandas as pd
 from src.analytics.source_confidence import SOURCE_VIEW_OPTIONS, confidence_for_source, filter_by_sources, filter_trends
 from src.etl.transform import build_skill_gap_summary, normalize_course_listings, normalize_job_postings
 from src.ingestion.base import RawRecord
-from src.quality.checks import summarize_quality
+from src.quality.checks import _duplicate_urls, _trusted_url_domains, summarize_quality
 
 class SourceConfidenceTests(unittest.TestCase):
     def test_source_confidence_mapping(self):
         self.assertEqual(confidence_for_source("microsoft_learn_catalog"), "live_verified")
+        self.assertEqual(confidence_for_source("freecodecamp_curriculum"), "live_verified")
+        self.assertEqual(confidence_for_source("github_learning_paths"), "live_broad")
         self.assertEqual(confidence_for_source("adzuna_jobs"), "live_verified")
         self.assertEqual(confidence_for_source("arbeitnow_jobs"), "live_verified")
         self.assertEqual(confidence_for_source("remotive_jobs"), "live_verified")
-        self.assertEqual(confidence_for_source("ycombinator_jobs"), "live_broad")
+        self.assertEqual(confidence_for_source("hackernews_who_is_hiring"), "live_broad")
         self.assertEqual(confidence_for_source("curated_data_jobs"), "curated_demo")
         self.assertEqual(confidence_for_source("youtube_learning"), "fallback_learning")
-        self.assertEqual(confidence_for_source("realpython_fake_jobs"), "test_source")
+        self.assertEqual(confidence_for_source("seed_job_postings"), "test_source")
 
     def test_normalized_records_include_source_confidence(self):
         collected_at = datetime(2026, 7, 18, tzinfo=timezone.utc)
@@ -105,6 +107,20 @@ class QualityCheckTests(unittest.TestCase):
         self.assertEqual(confidence_rows[confidence_rows["dataset"] == "jobs"].iloc[0]["status"], "pass")
         self.assertEqual(confidence_rows[confidence_rows["dataset"] == "courses"].iloc[0]["status"], "warning")
 
+    def test_duplicate_course_urls_are_detected_across_sources(self):
+        courses = pd.DataFrame({"url": ["https://example.com/course", "https://example.com/course/"]})
+        result = _duplicate_urls(courses, "courses")
+
+        self.assertEqual(result["status"], "fail")
+        self.assertEqual(result["failed_count"], 1)
+
+    def test_trusted_domain_check_accepts_official_subdomains(self):
+        courses = pd.DataFrame({"url": ["https://docs.oracle.com/en/database/"]})
+
+        result = _trusted_url_domains(courses, "courses", {"oracle.com"})
+
+        self.assertEqual(result["status"], "pass")
+
 class SourceModeFilterTests(unittest.TestCase):
     def test_source_mode_filters_jobs_courses_and_trends(self):
         jobs = pd.DataFrame(
@@ -139,6 +155,7 @@ class SourceModeFilterTests(unittest.TestCase):
         self.assertEqual(curated_jobs["source_name"].tolist(), ["curated_data_jobs"])
         self.assertEqual(curated_courses["source_name"].tolist(), ["open_course_catalog"])
         self.assertEqual(live_trends["source_name"].tolist(), ["remotive_jobs"])
+        self.assertNotIn("youtube_learning", live["courses"])
 
 
 if __name__ == "__main__":

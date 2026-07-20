@@ -1,19 +1,19 @@
-# SkillSync: Job Market Intelligence Dashboard
+# SkillSync: Technology Job Market Intelligence
 
 [![CI](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Sarthak2661/SkillSync/actions/workflows/ci.yml)
 ![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)
 ![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
 ![Release v1.5](https://img.shields.io/badge/release-v1.5-2E7D32)
 
-SkillSync is a job-market intelligence dashboard for people planning a data career. It compares hiring demand with available learning resources so users can see which skills are common requirements, which ones are growing, and which certifications or courses may be worth prioritizing.
+SkillSync is a job-market intelligence application for people exploring technology careers. It compares hiring demand with learning resources across data, software engineering, AI/ML, cloud and platform, database, IT and security, and technology consulting roles.
 
-Behind the dashboard is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through Streamlit, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
+Behind the product is a Python ETL pipeline that collects job postings and learning resources, extracts skills from the text, validates data quality, stores historical snapshots, and serves the results through a Next.js frontend, FastAPI, optional PostgreSQL tables, and Power BI-ready CSV exports.
 
 See the [v1.5 release notes](docs/release-v1.5.md) for the current release scope and verification checklist.
 
 ## Purpose
 
-People trying to enter data analyst, data engineering, or data science roles often see long lists of skills: SQL, Python, Power BI, Airflow, dbt, Snowflake, AWS, and many more. The hard part is not finding learning resources. The hard part is knowing which skills are actually showing up in job postings, whether enough learning material exists for those skills, and which certifications might be worth considering.
+Technology job descriptions often mix languages, frameworks, platforms, methods, and certifications. The hard part is not finding another course. It is understanding which skills appear in a target role family, whether suitable learning material exists, and which credentials or practice projects deserve attention.
 
 SkillSync turns that question into a small market-intelligence product:
 
@@ -26,16 +26,16 @@ SkillSync turns that question into a small market-intelligence product:
 ## How The Project Works
 
 1. **Ingest**
-   The pipeline collects job postings from public/sample job sources and learning resources from Microsoft Learn, YouTube/fallback records, vendor docs, open course catalogs, and university/open learning pages.
+   The pipeline collects job postings from public APIs and local snapshots, then joins them with Microsoft Learn, freeCodeCamp, GitHub learning paths, and repeatable course catalogs.
 
 2. **Clean**
    Raw records are saved as JSONL, then normalized into analytics-ready job and course CSV files.
 
 3. **Extract Skills**
-   A rule-based skill extractor scans titles, descriptions, subjects, roles, and products for tools and skills such as Python, SQL, Power BI, Airflow, dbt, Snowflake, AWS, Azure, and machine learning.
+   A rule-based extractor scans titles, descriptions, subjects, roles, and products for data tools, programming languages, web frameworks, cloud platforms, database systems, AI/ML methods, security concepts, and delivery practices.
 
 4. **Score**
-   The project calculates job demand, course supply, skill gap, demand/supply ratio, and a Skill Opportunity Index. Wage and growth inputs use O*NET occupation references when a skill maps cleanly to a data-related SOC occupation.
+   The project calculates job demand, course supply, skill gap, demand/supply ratio, and a Skill Opportunity Index. Wage and growth inputs use O*NET and BLS occupation references when a skill maps cleanly to a relevant SOC occupation.
 
 5. **Track History**
    Every run writes a `skill_trend_history` snapshot so the dashboard can show skill demand over time.
@@ -44,13 +44,25 @@ SkillSync turns that question into a small market-intelligence product:
    Quality checks flag missing fields, duplicate records, stale postings, source-domain issues, salary anomalies, and rows where no skills were extracted.
 
 7. **Serve**
-   Outputs are available through Streamlit, FastAPI, PostgreSQL, and Power BI-ready CSV exports.
+   Outputs are available through Next.js, FastAPI, PostgreSQL, and Power BI-ready CSV exports. The earlier Streamlit dashboard remains available as an optional legacy fallback.
 
 ## Screenshots
 
 ### Overview
 
-![SkillSync overview dashboard](docs/screenshots/dashboard_overview.png)
+![SkillSync Next.js overview dashboard](docs/screenshots/next_dashboard_desktop.png)
+
+### Responsive Overview
+
+![SkillSync Next.js mobile overview](docs/screenshots/next_dashboard_mobile.png)
+
+### Landing Page
+
+![SkillSync landing page](docs/screenshots/next_landing_desktop.png)
+
+### Weekly Market Briefing
+
+![SkillSync weekly market briefing](docs/screenshots/next_weekly_reports.png)
 
 ### Skill Trends
 
@@ -58,7 +70,7 @@ SkillSync turns that question into a small market-intelligence product:
 
 ### Skill Explorer
 
-![SkillSync skill explorer](docs/screenshots/skills_explorer.png)
+![SkillSync Next.js skill explorer](docs/screenshots/next_skill_explorer.png)
 
 ### Learning And Certification Path
 
@@ -83,11 +95,14 @@ SkillSync turns that question into a small market-intelligence product:
 flowchart LR
     subgraph Sources
         J1["Official Job APIs"]
-        J2["Curated Data-Role Jobs CSV"]
-        J3["Real Python Fake Jobs HTML"]
+        J2["Curated Technology Jobs CSV"]
+        J3["HN Who's Hiring via Algolia"]
         C1["YouTube Data API / Fallback"]
         C2["Microsoft Learn Catalog API"]
         C3["Curated Open Course Catalog"]
+        C4["freeCodeCamp Curriculum via GitHub"]
+        C5["GitHub Learning Paths"]
+        K1["Credential Engine / Curated Certifications"]
     end
 
     subgraph Pipeline
@@ -107,7 +122,8 @@ flowchart LR
 
     subgraph Serving
         API["FastAPI Analytics API"]
-        ST["Streamlit Dashboard"]
+        WEB["Next.js Product UI"]
+        ST["Streamlit Legacy Fallback"]
         PBI["Power BI Export Model"]
     end
 
@@ -117,6 +133,9 @@ flowchart LR
     C1 --> I
     C2 --> I
     C3 --> I
+    C4 --> I
+    C5 --> I
+    K1 --> G
     I --> R
     R --> T
     T --> Q
@@ -127,6 +146,7 @@ flowchart LR
     H --> CSV
     T --> CSV
     CSV --> API
+    API --> WEB
     CSV --> ST
     CSV --> PBI
     CSV --> PG
@@ -137,7 +157,7 @@ flowchart LR
 ## What It Does
 
 - Pulls job data from official job APIs, curated sample files, and optional parser-test pages.
-- Pulls learning resources from Microsoft Learn, YouTube, and small maintained catalogs.
+- Pulls learning resources from Microsoft Learn, freeCodeCamp's GitHub curriculum index, GitHub learning-path repositories, and YouTube when configured, plus repeatable catalogs of official documentation and open courses.
 - Extracts skills such as Python, SQL, Power BI, Airflow, dbt, Snowflake, and AWS.
 - Compares job demand with learning-resource supply.
 - Grounds skill and wage signals in O*NET-SOC occupation mappings where possible.
@@ -146,15 +166,16 @@ flowchart LR
 - Adds O*NET-SOC occupation codes, mapped occupations, wage medians, and outlook fields to the skill ranking table.
 - Saves a history row for every pipeline run so trends can be tracked over time.
 - Runs basic data quality checks.
-- Recommends certifications for selected skills.
+- Recommends certifications from a maintained cloud catalog, freeCodeCamp curriculum records, and the optional Credential Engine Registry Search API.
 - Finds current good-first-issue and help-wanted work in active GitHub repositories tagged for a selected skill.
-- Serves the processed data through Streamlit, FastAPI, PostgreSQL, and Power BI exports.
+- Serves the processed data through Next.js, FastAPI, PostgreSQL, and Power BI exports.
 
 ## Project Structure
 
 ```text
 api/                  FastAPI app
-dashboard/            Streamlit dashboard
+frontend/             React and Next.js product frontend
+dashboard/            Legacy Streamlit fallback
 dbt/                  PostgreSQL staging, intermediate, dimensions, facts, marts, and tests
 powerbi/              Power BI model and dashboard handoff
 docs/                 Project notes, source notes, runbook, roadmap, screenshots
@@ -171,6 +192,16 @@ export_powerbi.py     Power BI CSV model export
 docker-compose.yml    PostgreSQL, API, dashboard, pipeline, and dbt services
 ```
 
+## Technology Stack
+
+- Frontend: React 19, Next.js 16, TypeScript, Recharts, and Lucide icons.
+- API: FastAPI and pandas-backed analytical helpers.
+- Pipeline: Python 3.13, BeautifulSoup, source adapters, ETL transforms, and scheduled snapshots.
+- Orchestration: Airflow in Docker, with `scheduler.py` as a lightweight local fallback.
+- Storage and modeling: PostgreSQL 17 and dbt.
+- Reporting: Power BI-ready star-schema CSV exports.
+- Runtime and quality: Docker Compose, GitHub Actions, Python unit tests, ESLint, and TypeScript.
+
 ## Docker Quick Start
 
 Start Docker Desktop first, then run:
@@ -184,9 +215,9 @@ That starts:
 - PostgreSQL 17 at `localhost:5434`
 - one bootstrap pipeline run that creates local data files and Power BI CSVs
 - FastAPI at `http://127.0.0.1:8000/docs`
-- Streamlit dashboard at `http://127.0.0.1:8501`
+- Next.js product UI at `http://127.0.0.1:3000`
 
-No manual database setup is required for the default demo. The API and dashboard wait until the first pipeline run has completed.
+No manual database setup is required for the default demo. The API and frontend wait until the first pipeline run has completed.
 
 Optional API keys can be added through your shell or `.env` before starting Docker:
 
@@ -201,6 +232,7 @@ Stop the stack with:
 ```powershell
 docker compose down
 ```
+
 ## Local Setup
 
 Clone the repository and open it in VS Code:
@@ -218,6 +250,14 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 copy .env.example .env
+```
+
+Install the frontend dependencies with Node.js 20.9 or newer:
+
+```powershell
+cd frontend
+npm.cmd install
+cd ..
 ```
 
 Run the pipeline once:
@@ -238,19 +278,19 @@ Run a quick check that the latest output is readable:
 python scripts\smoke_check.py
 ```
 
-Start the dashboard:
+Start FastAPI in one terminal:
+
+```powershell
+.\scripts\run_api.ps1
+```
+
+Start the Next.js frontend in another terminal:
 
 ```powershell
 .\scripts\run_dashboard.ps1
 ```
 
-Open `http://127.0.0.1:8501/`.
-
-Start the API in a second terminal:
-
-```powershell
-.\scripts\run_api.ps1
-```
+Open `http://127.0.0.1:3000/`.
 
 Open `http://127.0.0.1:8000/docs`.
 
@@ -283,20 +323,25 @@ The Docker database uses the credentials in `docker-compose.yml`.
 
 ## Source Modes
 
-The default `.env.example` runs the full source mix. For a faster local demo, change these values in `.env`:
+The default `.env.example` uses curated technology jobs and deterministic learning resources so the first run clears the dashboard sample-size check without depending on live APIs:
 
 ```text
 MARKET_INTEL_JOB_SOURCE_MODE=curated
 MARKET_INTEL_COURSE_SOURCE_MODE=hybrid
-MARKET_INTEL_COURSE_SOURCE_LIMIT=50
+MARKET_INTEL_COURSE_SOURCE_LIMIT=200
 ```
 
 Useful modes:
 
 | Setting | Options |
 | --- | --- |
-| `MARKET_INTEL_JOB_SOURCE_MODE` | `curated`, `seed`, `adzuna`, `arbeitnow`, `remotive`, `job_apis`, `realpython`, `yc`, `all` |
-| `MARKET_INTEL_COURSE_SOURCE_MODE` | `hybrid`, `open_catalog`, `vendor_docs`, `university_open`, `youtube`, `microsoft`, `microsoft_open`, `all` |
+| `MARKET_INTEL_JOB_SOURCE_MODE` | `curated`, `seed`, `adzuna`, `arbeitnow`, `remotive`, `hn`, `job_apis`, `all` |
+| `MARKET_INTEL_COURSE_SOURCE_MODE` | `hybrid`, `open_catalog`, `vendor_docs`, `university_open`, `youtube`, `microsoft`, `freecodecamp`, `github_learning`, `official_live`, `all` |
+| `MARKET_INTEL_CERTIFICATION_SOURCE_MODE` | `curated`, `freecodecamp`, `credential_engine`, `all` |
+
+`curated` certification mode is the default. It uses the local AWS, Microsoft, and Google Cloud catalog plus a freeCodeCamp curriculum snapshot, so a fresh clone does not need network access. `freecodecamp` verifies tracks against the official GitHub curriculum index. `credential_engine` and `all` query Credential Engine only when `MARKET_INTEL_CREDENTIAL_ENGINE_API_KEY` is set.
+
+Credential Engine's Registry Search API is not anonymous: it requires a Credential Engine account, approval for Graph Search API access, and an API key. The integration is intentionally optional and limited to a small real-time query rather than bulk collection.
 
 More detailed local run notes are in [docs/runbook.md](docs/runbook.md).
 
@@ -311,9 +356,10 @@ docker compose -f docker-compose.yml -f docker-compose.airflow.yml --profile air
 Open `http://localhost:8080`, log in with `admin` / `admin`, and trigger `skillsync_market_intel_pipeline`.
 
 The DAG runs ingestion, transformation, quality checks, PostgreSQL loading, dbt models/tests, and Power BI export in dependency order.
+
 ## Scheduling
 
-Use `scheduler.py` for repeated pipeline runs. The interval is controlled by `MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES` in `.env`, and logs are written to `logs/scheduler.log`.
+Use `scheduler.py` for repeated pipeline runs. It defaults to one run every 1,440 minutes (daily), controlled by `MARKET_INTEL_SCHEDULE_INTERVAL_MINUTES` in `.env`. Logs are written to `logs/scheduler.log`.
 
 For production-style scheduling, run `pipeline.py` through Windows Task Scheduler, cron, or another scheduler of your choice.
 
@@ -328,6 +374,16 @@ python scripts\smoke_check.py
 
 The tests cover ingestion, skill extraction, scoring, source confidence, O*NET evidence, data quality, and Power BI star-schema relationships.
 
+Validate the frontend separately:
+
+```powershell
+cd frontend
+npm.cmd audit --omit=dev
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd run build
+```
+
 ## FastAPI
 
 Start the API with:
@@ -338,19 +394,27 @@ Start the API with:
 
 Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
 
-Main endpoints include `/health`, `/kpis`, `/skill-gaps`, `/skill-trends`, `/jobs`, `/courses`, `/certifications`, `/practice-projects`, `/quality`, and `/sources`.
+Main endpoints include `/health`, `/runs`, `/source-runs`, `/scheduler`, `/kpis`, `/skill-gaps`, `/skill-trends`, `/weekly-reports`, `/jobs`, `/courses`, `/certifications`, `/practice-projects`, `/quality`, and `/sources`. Market endpoints accept `source_view=demo|live|curated|all`.
 
-## Streamlit Dashboard
+## Next.js Frontend
 
-Start the dashboard with:
+Start FastAPI, then start the frontend with:
 
 ```powershell
 .\scripts\run_dashboard.ps1
 ```
 
-Open `http://127.0.0.1:8501/`.
+Open `http://127.0.0.1:3000/`.
 
-Dashboard pages include Overview, Trend Lab, Skills Explorer, Learning & Certification Path, Logs & Quality, and Guide.
+Pages include a public landing page, Overview, Skill Explorer and skill detail, Market Trends, Weekly Briefings, Practice Projects, Certifications, Data Quality, Sources, Pipeline Runs, and Methodology. The data-scope control switches between demo-safe, live-only, curated, and all-source views without rewriting pipeline outputs.
+
+The previous Streamlit interface is kept as an explicit fallback:
+
+```powershell
+.\scripts\run_streamlit_dashboard.ps1
+```
+
+Open `http://127.0.0.1:8501/`. With Docker, use `docker compose --profile legacy up streamlit-dashboard`.
 
 ## dbt Analytics Layer
 
@@ -364,11 +428,15 @@ The dbt project turns the pipeline tables into a tested star schema:
 
 Run it against the Docker PostgreSQL warehouse:
 
-    docker compose --profile analytics run --rm dbt build
-    docker compose --profile analytics run --rm dbt docs generate
-    docker compose --profile analytics run --rm -p 8081:8080 dbt docs serve --host 0.0.0.0 --port 8080
+```powershell
+docker compose --profile analytics run --rm dbt build
+docker compose --profile analytics run --rm dbt docs generate
+docker compose --profile analytics run --rm -p 8081:8080 dbt docs serve --host 0.0.0.0 --port 8080
+```
 
-The validated build contains 14 models and 58 data tests covering nulls, uniqueness, accepted values, and relationships.
+The pipeline loader and dbt must point to the same PostgreSQL instance. The default Compose settings already do this. If `MARKET_INTEL_DOCKER_DB_URL` points to PostgreSQL on the Windows host, set `DBT_POSTGRES_HOST`, `DBT_POSTGRES_PORT`, `DBT_POSTGRES_USER`, `DBT_POSTGRES_PASSWORD`, and `DBT_POSTGRES_DB` to that same database before running dbt.
+
+The dbt build covers staging, intermediate models, dimensions, facts, and marts with null, uniqueness, accepted-value, and relationship tests.
 
 ## Power BI Dashboard
 
@@ -378,7 +446,7 @@ Dashboard build instructions, relationships, and DAX measures are documented in 
 
 ## GitHub Practice Recommender
 
-On the Learning & Certification Path page, select one skill to find open-source work in recently active repositories tagged with that GitHub topic. Results prefer good first issue, then help wanted, and exclude pull requests.
+On the Practice Projects page, select one skill to find open-source work in recently active repositories tagged with that GitHub topic. Results prefer good first issue, then help wanted, and exclude pull requests.
 
 Public requests work without authentication. For a higher rate limit, add this to your local .env file:
 
@@ -388,12 +456,12 @@ The token is optional, read only from the environment, and must not be committed
 
 ## Data Quality Checks
 
-The quality layer flags common issues before the dashboard is used, including low sample sizes, unexpected source domains, stale job postings, salary anomalies, duplicate records, and rows where no skills were extracted.
+The quality layer flags common issues before the dashboard is used, including low sample sizes, unexpected source domains, stale job postings, salary anomalies, duplicate records, reused course URLs, and rows where no skills were extracted.
 
 ## Known Limitations
 
-- YC Jobs and RealPython Fake Jobs are kept as optional legacy/parser sources. The preferred live job path is now official APIs because they are less fragile than HTML scraping.
-- Live websites can change their HTML structure or access rules. The project includes sample/fallback sources so it can still run when a public source changes.
+- Live job collection uses documented JSON APIs rather than job-board HTML scraping. API schemas, rate limits, and availability can still change.
+- HN Who's Hiring posts are user-authored and semi-structured, so the connector keeps top-level technology-role posts and labels them `live_broad`.
 - YouTube uses the YouTube Data API only when `MARKET_INTEL_YOUTUBE_API_KEY` is configured; otherwise it uses local YouTube learning fallback records.
 - PostgreSQL loading is optional and depends on Docker or a reachable local PostgreSQL database.
 - GitHub issues can be closed or relabeled after retrieval, and unauthenticated API access has lower rate limits.
@@ -473,14 +541,14 @@ After multiple runs, the dashboard and API can answer trend questions such as:
 
 The trend table is split by `location` and `role_category`, so Power BI can compare skill demand across markets and job tracks instead of showing one global count.
 
-The pipeline also appends run metadata to `logs/pipeline_runs.csv`, including the run timestamp, record counts, trend-row count, and top opportunity skill. The dashboard's `Logs & Quality` page reads this file so scheduled refreshes can be audited.
+The pipeline appends summary metadata to `logs/pipeline_runs.csv`. It also writes one row per connector to `logs/source_runs.csv`, recording status, row count, duration, error type, and timestamps. The Pipeline Runs page and `/source-runs` endpoint expose that activity so a failed live source is visible even when the rest of the run succeeds.
 
 ## Learning And Certification Path
 
 The dashboard also has a learning page:
 
-- Recommended certifications by skill, provider, level, cost type, target role, and recommendation score.
-- Related YouTube, Microsoft Learn, vendor-doc, university, and open-course resources.
+- Recommended certifications by skill, provider, provenance, verification date, cost type, target role, and recommendation score.
+- Related freeCodeCamp, GitHub learning-path, YouTube, Microsoft Learn, vendor-doc, university, and open-course resources.
 - Market context for selected skills, including opportunity index, job demand, course supply, and target roles.
 
 This page is meant to answer: "If this skill looks useful, what should I study or certify in next?"

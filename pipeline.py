@@ -4,21 +4,22 @@ from src.config.settings import settings
 from src.ingestion.course_sources import (
     CompositeCourseSource,
     MicrosoftLearnCourseSource,
+    OfficialLearningCatalogSource,
     OpenCourseCatalogSource,
     UniversityOpenCourseSource,
     VendorDocsCourseSource,
     YouTubeLearningSource,
 )
-from src.ingestion.curated_job_source import CuratedDataJobsSource
+from src.ingestion.learning_sources import FreeCodeCampCurriculumSource, GitHubLearningPathSource
+from src.ingestion.curated_job_source import CuratedDataJobsSource, CuratedTechnologyJobsSource
 from src.ingestion.job_sources import (
     AdzunaJobsSource,
     ArbeitnowJobsSource,
     CompositeJobSource,
     EnterpriseAnalyticsJobsSource,
-    RealPythonFakeJobsSource,
+    HackerNewsWhoIsHiringSource,
     RemotiveJobsSource,
     StartupDataJobsSource,
-    YCombinatorJobsSource,
 )
 from src.ingestion.seed_sources import SeedCourseListingSource, SeedJobPostingSource
 from src.orchestration.pipeline_steps import (
@@ -55,6 +56,7 @@ def run_pipeline() -> dict[str, str]:
         "raw_jobs": ingested["raw_jobs"],
         "raw_courses": ingested["raw_courses"],
         "clean_jobs": transformed["clean_jobs"],
+        "source_run_log": ingested["source_run_log"],
         "clean_courses": transformed["clean_courses"],
         "skill_gap_summary": transformed["skill_gap_summary"],
         "skill_trend_history": transformed["skill_trend_history"],
@@ -78,37 +80,44 @@ def get_job_source():
     if mode == "seed":
         return SeedJobPostingSource()
     if mode in {"curated", "curated_data", "portfolio"}:
-        return CuratedDataJobsSource()
+        return CompositeJobSource([CuratedDataJobsSource(), CuratedTechnologyJobsSource()])
     if mode in {"startup", "startup_data"}:
         return StartupDataJobsSource()
     if mode in {"enterprise", "enterprise_analytics"}:
         return EnterpriseAnalyticsJobsSource()
-    if mode in {"realpython", "realpython_fake_jobs", "scrape"}:
-        return RealPythonFakeJobsSource()
-    if mode in {"yc", "ycombinator", "y_combinator", "legacy_yc"}:
-        return YCombinatorJobsSource()
     if mode in {"adzuna", "adzuna_jobs"}:
         return AdzunaJobsSource()
     if mode in {"arbeitnow", "arbeitnow_jobs"}:
         return ArbeitnowJobsSource()
     if mode in {"remotive", "remotive_jobs"}:
         return RemotiveJobsSource()
+    if mode in {"hn", "hackernews", "hackernews_who_is_hiring"}:
+        return HackerNewsWhoIsHiringSource()
     if mode in {"job_apis", "official_apis", "api_jobs"}:
-        return CompositeJobSource([AdzunaJobsSource(), ArbeitnowJobsSource(), RemotiveJobsSource()])
+        return CompositeJobSource(
+            [
+                AdzunaJobsSource(),
+                ArbeitnowJobsSource(),
+                RemotiveJobsSource(),
+                HackerNewsWhoIsHiringSource(),
+            ]
+        )
     if mode in {"all", "all_demo", "portfolio_all", "five_sources"}:
         return CompositeJobSource(
             [
                 CuratedDataJobsSource(),
+                CuratedTechnologyJobsSource(),
                 StartupDataJobsSource(),
                 EnterpriseAnalyticsJobsSource(),
                 AdzunaJobsSource(),
                 ArbeitnowJobsSource(),
                 RemotiveJobsSource(),
+                HackerNewsWhoIsHiringSource(),
             ]
         )
     raise ValueError(
         f"Unsupported job source mode '{settings.job_source_mode}'. "
-        "Use 'seed', 'curated', 'startup', 'enterprise', 'adzuna', 'arbeitnow', 'remotive', 'job_apis', 'yc', 'realpython', or 'all'."
+        "Use 'seed', 'curated', 'startup', 'enterprise', 'adzuna', 'arbeitnow', 'remotive', 'hn', 'job_apis', or 'all'."
     )
 
 
@@ -124,17 +133,36 @@ def get_course_source():
         return UniversityOpenCourseSource()
     if mode in {"youtube", "youtube_learning"}:
         return YouTubeLearningSource()
+    if mode in {"freecodecamp", "freecodecamp_curriculum"}:
+        return FreeCodeCampCurriculumSource()
+    if mode in {"github_learning", "github_learning_paths", "roadmaps"}:
+        return GitHubLearningPathSource()
     if mode in {"hybrid", "portfolio", "multi"}:
-        return CompositeCourseSource([SeedCourseListingSource(), OpenCourseCatalogSource()])
+        return CompositeCourseSource(
+            [
+                SeedCourseListingSource(),
+                OpenCourseCatalogSource(),
+                VendorDocsCourseSource(),
+                UniversityOpenCourseSource(),
+                OfficialLearningCatalogSource(),
+            ]
+        )
     if mode in {"all", "all_demo", "portfolio_all", "five_sources"}:
         return CompositeCourseSource(
             [
                 YouTubeLearningSource(),
                 OpenCourseCatalogSource(),
+                OfficialLearningCatalogSource(),
                 VendorDocsCourseSource(),
                 UniversityOpenCourseSource(),
                 MicrosoftLearnCourseSource(),
+                FreeCodeCampCurriculumSource(),
+                GitHubLearningPathSource(),
             ]
+        )
+    if mode in {"official_live", "live_learning"}:
+        return CompositeCourseSource(
+            [MicrosoftLearnCourseSource(), FreeCodeCampCurriculumSource(), GitHubLearningPathSource()]
         )
     if mode in {"microsoft_open", "microsoft_hybrid"}:
         return CompositeCourseSource([MicrosoftLearnCourseSource(), OpenCourseCatalogSource()])
@@ -142,7 +170,8 @@ def get_course_source():
         return MicrosoftLearnCourseSource()
     raise ValueError(
         f"Unsupported course source mode '{settings.course_source_mode}'. "
-        "Use 'seed', 'open_catalog', 'vendor_docs', 'university_open', 'youtube', 'hybrid', 'microsoft', 'microsoft_open', or 'all'."
+        "Use 'seed', 'open_catalog', 'vendor_docs', 'university_open', 'youtube', 'freecodecamp', "
+        "'github_learning', 'hybrid', 'microsoft', 'microsoft_open', 'official_live', or 'all'."
     )
 
 

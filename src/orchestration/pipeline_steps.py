@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import requests
 
 from src.analytics.certifications import build_certification_recommendations
 from src.analytics.powerbi import export_powerbi_model
@@ -17,15 +19,16 @@ from src.etl.transform import (
     normalize_course_listings,
     normalize_job_postings,
 )
-from src.ingestion.base import RawRecord
+from src.ingestion.base import RawRecord, SourceFetchStatus, fetch_with_status
 from src.quality.checks import summarize_quality
 from src.warehouse.postgres import load_pipeline_outputs
 
 
 def ingest_sources(job_source: Any, course_source: Any, run_id: str | None = None) -> dict[str, str]:
     run_id = run_id or run_timestamp()
-    job_records = job_source.fetch()
-    course_records = course_source.fetch()
+    job_records, job_statuses = _fetch_records(job_source, (requests.RequestException,))
+    course_records, course_statuses = _fetch_records(course_source, (requests.RequestException, ValueError))
+    source_status_path = _append_source_run_log(run_id, job_statuses + course_statuses)
 
     raw_jobs_path = save_raw_records(job_records, "job_postings_raw", run_id)
     raw_courses_path = save_raw_records(course_records, "course_listings_raw", run_id)
@@ -36,8 +39,36 @@ def ingest_sources(job_source: Any, course_source: Any, run_id: str | None = Non
         "raw_courses": str(raw_courses_path),
         "job_records": str(len(job_records)),
         "course_records": str(len(course_records)),
+        "source_run_log": str(source_status_path),
     }
 
+
+
+def _fetch_records(
+    source: Any,
+    handled_errors: tuple[type[Exception], ...],
+) -> tuple[list[RawRecord], list[SourceFetchStatus]]:
+    records, top_status = fetch_with_status(source, handled_errors)
+    child_statuses = getattr(source, "fetch_statuses", None)
+    return records, list(child_statuses) if child_statuses else [top_status]
+
+
+def _append_source_run_log(run_id: str, statuses: list[SourceFetchStatus]) -> Path:
+    log_dir = Path("logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    path = log_dir / "source_runs.csv"
+
+    rows = []
+    for status in statuses:
+        row = asdict(status)
+        row["started_at"] = status.started_at.isoformat()
+        row["completed_at"] = status.completed_at.isoformat()
+        row["run_id"] = run_id
+        rows.append(row)
+
+    if rows:
+        pd.DataFrame(rows).to_csv(path, mode="a", header=not path.exists(), index=False)
+    return path
 
 def transform_raw_records(raw_jobs_path: str, raw_courses_path: str, run_id: str) -> dict[str, str]:
     job_records = read_raw_records(raw_jobs_path)

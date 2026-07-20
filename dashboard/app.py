@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import sys
 import re
@@ -60,257 +60,31 @@ def ensure_columns(df: pd.DataFrame, defaults: dict[str, object]) -> pd.DataFram
 
 
 def inject_styles() -> None:
-    st.markdown(
-        """
-        <style>
-        :root {
-            --ss-bg: #0b0f14;
-            --ss-bg-soft: #111820;
-            --ss-panel: #f8fafc;
-            --ss-panel-2: #eef3f7;
-            --ss-text: #101827;
-            --ss-muted: #667085;
-            --ss-line: #d8e0e8;
-            --ss-teal: #14b8a6;
-            --ss-coral: #f97362;
-            --ss-gold: #d89f18;
-        }
-
-        @keyframes ssFadeUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes ssAccent {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .stApp {
-            background:
-                linear-gradient(135deg, rgba(20, 184, 166, .08), transparent 32%),
-                linear-gradient(180deg, #0b0f14 0%, #10161d 52%, #0d1117 100%);
-            color: #f8fafc;
-        }
-
-        .block-container {
-            max-width: 1240px;
-            padding-top: 1.25rem;
-            padding-bottom: 3rem;
-            animation: ssFadeUp .45s ease-out both;
-        }
-
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #121821 0%, #0d131a 100%);
-            border-right: 1px solid rgba(216, 224, 232, .12);
-        }
-
-        section[data-testid="stSidebar"] > div {
-            padding-top: 1.1rem;
-        }
-
-        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
-        section[data-testid="stSidebar"] label,
-        section[data-testid="stSidebar"] span {
-            color: #dbe5ee;
-        }
-
-        section[data-testid="stSidebar"] h3 {
-            color: #f8fafc;
-            font-size: .82rem;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            margin-top: 1rem;
-        }
-
-        section[data-testid="stSidebar"] [role="radiogroup"] label {
-            border-radius: 8px;
-            padding: .18rem .25rem;
-            transition: background .2s ease, transform .2s ease;
-        }
-
-        section[data-testid="stSidebar"] [role="radiogroup"] label:hover {
-            background: rgba(20, 184, 166, .12);
-            transform: translateX(2px);
-        }
-
-        section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
-            background: #0b1118;
-            border: 1px solid rgba(216, 224, 232, .16);
-            border-radius: 8px;
-            box-shadow: none;
-        }
-
-        section[data-testid="stSidebar"] div[data-baseweb="tag"] {
-            background: #1f2933;
-            border: 1px solid rgba(20, 184, 166, .35);
-            color: #e8f7f5;
-            border-radius: 8px;
-        }
-
-        section[data-testid="stSidebar"] div[data-baseweb="tag"]:nth-of-type(2n) {
-            border-color: rgba(249, 115, 98, .45);
-        }
-
-        section[data-testid="stSidebar"] [data-testid="stSlider"] div[role="slider"] {
-            background-color: var(--ss-teal);
-            border-color: #a7f3d0;
-        }
-
-        .skillsync-hero {
-            text-align: center;
-            padding: 1.4rem 1rem 1.15rem;
-            border-bottom: 1px solid rgba(216, 224, 232, .22);
-            margin-bottom: 1.15rem;
-            position: relative;
-        }
-
-        .skillsync-hero::after {
-            content: "";
-            display: block;
-            width: 180px;
-            height: 3px;
-            margin: 1rem auto 0;
-            border-radius: 8px;
-            background: linear-gradient(90deg, var(--ss-teal), var(--ss-gold), var(--ss-coral));
-            background-size: 200% 200%;
-            animation: ssAccent 7s ease infinite;
-        }
-
-        .skillsync-title {
-            font-size: 2.9rem;
-            line-height: 1.08;
-            font-weight: 800;
-            color: #f8fafc;
-            margin: 0;
-            letter-spacing: 0;
-        }
-
-        .skillsync-subtitle {
-            color: #b9c7d6;
-            font-size: 1rem;
-            margin-top: .55rem;
-        }
-
-        div[data-testid="stMetric"] {
-            background: linear-gradient(180deg, #ffffff 0%, #f6f9fb 100%);
-            border: 1px solid var(--ss-line);
-            border-radius: 8px;
-            padding: 1.05rem 1.15rem;
-            box-shadow: 0 14px 30px rgba(2, 6, 23, .24);
-            min-height: 96px;
-            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-            animation: ssFadeUp .5s ease-out both;
-        }
-
-        div[data-testid="stMetric"]:hover {
-            transform: translateY(-3px);
-            border-color: rgba(20, 184, 166, .5);
-            box-shadow: 0 18px 36px rgba(2, 6, 23, .3);
-        }
-
-        div[data-testid="stMetric"] label,
-        div[data-testid="stMetric"] [data-testid="stMetricLabel"],
-        div[data-testid="stMetric"] [data-testid="stMetricLabel"] p {
-            color: var(--ss-muted) !important;
-            font-weight: 700 !important;
-            opacity: 1 !important;
-        }
-
-        div[data-testid="stMetric"] [data-testid="stMetricValue"],
-        div[data-testid="stMetric"] [data-testid="stMetricValue"] div {
-            color: var(--ss-text) !important;
-            font-weight: 800 !important;
-            opacity: 1 !important;
-        }
-
-        div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
-            color: var(--ss-teal) !important;
-        }
-
-        .insight-strip {
-            background: rgba(248, 250, 252, .98);
-            border: 1px solid var(--ss-line);
-            border-left: 4px solid var(--ss-teal);
-            border-radius: 8px;
-            padding: .9rem 1rem;
-            margin: .65rem 0 1.1rem;
-            color: #243244;
-            box-shadow: 0 10px 24px rgba(2, 6, 23, .16);
-            animation: ssFadeUp .52s ease-out both;
-        }
-
-        .section-label {
-            font-size: .8rem;
-            color: #b9c7d6;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            font-weight: 700;
-            margin-bottom: .35rem;
-        }
-
-        .soft-panel {
-            background: linear-gradient(180deg, rgba(248, 250, 252, .99), rgba(239, 245, 248, .99));
-            border: 1px solid var(--ss-line);
-            border-radius: 8px;
-            padding: 1.05rem 1.15rem;
-            margin: 1rem 0 1.25rem;
-            color: #1f2a37;
-            box-shadow: 0 12px 28px rgba(2, 6, 23, .18);
-            animation: ssFadeUp .55s ease-out both;
-        }
-
-        .soft-panel h4 {
-            color: var(--ss-text);
-            margin: 0 0 .35rem 0;
-        }
-
-        .soft-panel p, .soft-panel li {
-            color: #334155;
-        }
-
-        .section-spacer { height: 1.25rem; }
-
-        div[data-testid="stDataFrame"] {
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid rgba(216, 224, 232, .18);
-            box-shadow: 0 12px 28px rgba(2, 6, 23, .18);
-        }
-
-        div[data-testid="stAlert"] {
-            border-radius: 8px;
-        }
-
-        button[kind="secondary"], button[data-testid="baseButton-secondary"] {
-            border-radius: 8px;
-            border-color: rgba(20, 184, 166, .35);
-        }
-
-        @media (max-width: 760px) {
-            .skillsync-title { font-size: 2.1rem; }
-            .block-container { padding-left: 1rem; padding-right: 1rem; }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    styles = (Path(__file__).with_name("styles.css")).read_text(encoding="utf-8")
+    st.markdown(f"<style>{styles}</style>", unsafe_allow_html=True)
 
 
 def render_header() -> None:
     st.markdown(
-        f"""
-        <div class="skillsync-hero">
-            <h1 class="skillsync-title">{APP_TITLE}</h1>
-            <div class="skillsync-subtitle">
-                Job skills, learning resources, opportunity scores, and run history.
+        """
+        <header class="skillsync-header">
+            <div class="skillsync-heading">
+                <div class="skillsync-product-row">
+                    <span class="skillsync-mark">S</span>
+                    <span class="skillsync-product">SkillSync</span>
+                    <span class="skillsync-status"><span></span> Market data ready</span>
+                </div>
+                <h1>Job market intelligence</h1>
+                <p>Explore skill demand, learning supply, role targets, and pipeline history.</p>
             </div>
-        </div>
+            <div class="skillsync-header-meta">
+                <span>Career data workspace</span>
+                <strong>Data roles</strong>
+            </div>
+        </header>
         """,
         unsafe_allow_html=True,
     )
-
 
 def filtered_frames(data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     gaps = data["gaps"]
@@ -408,6 +182,14 @@ def source_catalog() -> pd.DataFrame:
             },
             {
                 "type": "Jobs",
+                "source": "HN Who's Hiring via Algolia",
+                "mode": "hn",
+                "source_confidence": "live_broad",
+                "site_or_file": "https://hn.algolia.com/api",
+                "use": "Official read API for top-level data-role posts in the latest monthly hiring thread.",
+            },
+            {
+                "type": "Jobs",
                 "source": "Sample Data Jobs",
                 "mode": "curated",
                 "source_confidence": "curated_demo",
@@ -429,22 +211,6 @@ def source_catalog() -> pd.DataFrame:
                 "source_confidence": "curated_demo",
                 "site_or_file": "src/ingestion/job_sources.py",
                 "use": "Small enterprise BI and cloud analytics feed.",
-            },
-            {
-                "type": "Jobs",
-                "source": "Y Combinator Jobs",
-                "mode": "yc",
-                "source_confidence": "live_broad",
-                "site_or_file": "https://www.ycombinator.com/jobs",
-                "use": "Optional legacy HTML scraper. Real but broad; not used in the default all-source mix.",
-            },
-            {
-                "type": "Jobs",
-                "source": "Real Python Fake Jobs",
-                "mode": "realpython",
-                "source_confidence": "test_source",
-                "site_or_file": "https://realpython.github.io/fake-jobs/",
-                "use": "Public fake job page used to test scraper parsing.",
             },
             {
                 "type": "Courses",
@@ -480,6 +246,22 @@ def source_catalog() -> pd.DataFrame:
             },
             {
                 "type": "Courses",
+                "source": "freeCodeCamp Curriculum",
+                "mode": "freecodecamp",
+                "source_confidence": "live_verified",
+                "site_or_file": "GitHub Contents API for freeCodeCamp/freeCodeCamp",
+                "use": "Official structured curriculum index for free data and programming tracks.",
+            },
+            {
+                "type": "Courses",
+                "source": "GitHub Learning Paths",
+                "mode": "github_learning",
+                "source_confidence": "live_broad",
+                "site_or_file": "GitHub Repository Search API",
+                "use": "Recently maintained awesome lists and roadmaps for tracked skills.",
+            },
+            {
+                "type": "Courses",
                 "source": "Vendor Docs Catalog",
                 "mode": "vendor_docs",
                 "source_confidence": "curated_demo",
@@ -491,8 +273,24 @@ def source_catalog() -> pd.DataFrame:
                 "source": "University Open Catalog",
                 "mode": "university_open",
                 "source_confidence": "curated_demo",
-                "site_or_file": "edX, MIT OpenCourseWare, Coursera browse pages",
+                "site_or_file": "edX and MIT OpenCourseWare",
                 "use": "Open statistics, ML, and visualization resources.",
+            },
+            {
+                "type": "Certifications",
+                "source": "Credential Engine Registry",
+                "mode": "credential_engine or all",
+                "source_confidence": "live_verified",
+                "site_or_file": "Credential Engine Registry Search API",
+                "use": "Optional CTDL credential search. Requires an approved account and API key.",
+            },
+            {
+                "type": "Certifications",
+                "source": "Cloud Certification Catalog",
+                "mode": "curated",
+                "source_confidence": "curated_demo",
+                "site_or_file": "data/sample/cloud_certifications.json",
+                "use": "Manually verified AWS, Microsoft, and Google Cloud credentials.",
             },
         ]
     )
@@ -555,14 +353,16 @@ def render_source_panel(data: dict[str, pd.DataFrame]) -> None:
         - Adzuna Jobs API: `https://api.adzuna.com/v1/api/jobs/` (requires app id/key)
         - Arbeitnow Job API: `https://www.arbeitnow.com/api/job-board-api`
         - Remotive Jobs API: `https://remotive.com/api/remote-jobs`
+        - HN Who's Hiring: `https://hn.algolia.com/api`
         - Sample jobs: `data/sample/curated_data_jobs.csv`
         - Startup and enterprise data jobs: local feeds in `src/ingestion/job_sources.py`
-        - Optional legacy/parser sources: YC Jobs and RealPython Fake Jobs
         - YouTube Learning: YouTube Data API if `MARKET_INTEL_YOUTUBE_API_KEY` is configured; local fallback otherwise
         - Course API: `https://learn.microsoft.com/api/catalog/`
         - Open-course catalog: freeCodeCamp, Kaggle Learn, Apache Airflow docs, Databricks training, DeepLearning.AI
         - Vendor docs catalog: Apache Airflow docs, dbt docs, Snowflake docs
-        - University/open catalog: edX, MIT OpenCourseWare, Coursera browse pages
+        - freeCodeCamp curriculum: official GitHub curriculum index
+        - GitHub learning paths: repository search for maintained awesome lists and roadmaps
+        - University/open catalog: edX and MIT OpenCourseWare
         """
     )
 
@@ -780,6 +580,8 @@ def render_learning_path(data: dict[str, pd.DataFrame]) -> None:
         "level",
         "free_or_paid",
         "estimated_cost_usd",
+        "source_confidence",
+        "last_verified",
         "recommendation_score",
         "target_roles",
         "url",
@@ -894,7 +696,7 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
                 })
     st.dataframe(pd.DataFrame(source_rows), width="stretch", hide_index=True)
 
-    st.markdown("### Supported Job And Course Sources")
+    st.markdown("### Supported Data Sources")
     st.dataframe(source_catalog(), width="stretch", hide_index=True)
     st.markdown(
         """
@@ -903,9 +705,9 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
         - Adzuna Jobs API: `https://api.adzuna.com/v1/api/jobs/` (requires app id/key)
         - Arbeitnow Job API: `https://www.arbeitnow.com/api/job-board-api`
         - Remotive Jobs API: `https://remotive.com/api/remote-jobs`
+        - HN Who's Hiring: `https://hn.algolia.com/api`
         - Sample data-role jobs: `data/sample/curated_data_jobs.csv`
         - Startup and enterprise data jobs: local feeds in `src/ingestion/job_sources.py`
-        - Optional legacy/parser sources: YC Jobs and RealPython Fake Jobs
 
         **Course listing sources**
 
@@ -914,7 +716,15 @@ def render_guide(data: dict[str, pd.DataFrame]) -> None:
         - Open Course Catalog: freeCodeCamp, Kaggle Learn, Microsoft Learn, Apache Airflow docs, Databricks training, DeepLearning.AI
         - Microsoft Learn Catalog API: `https://learn.microsoft.com/api/catalog/`
         - Vendor Docs Catalog: Apache Airflow docs, dbt docs, Snowflake docs
-        - University Open Catalog: edX, MIT OpenCourseWare, Coursera browse pages
+        - freeCodeCamp Curriculum: official GitHub curriculum index
+        - GitHub Learning Paths: maintained awesome lists and roadmaps returned by GitHub's API
+        - University Open Catalog: edX and MIT OpenCourseWare
+
+        **Certification sources**
+
+        - Local cloud catalog: `data/sample/cloud_certifications.json`
+        - freeCodeCamp certifications: verified against the official GitHub curriculum index
+        - Credential Engine Registry Search API: optional; requires an approved API key
 
         Use `MARKET_INTEL_JOB_SOURCE_MODE=all` and `MARKET_INTEL_COURSE_SOURCE_MODE=all` to run all current sources.
         """
@@ -939,9 +749,23 @@ def main() -> None:
         st.warning("No processed datasets found. Run `python pipeline.py` first.")
         return
 
+    st.sidebar.markdown(
+        """
+        <div class="sidebar-brand">
+            <span class="sidebar-logo">S</span>
+            <div class="sidebar-brand-copy">
+                <strong>SkillSync</strong>
+                <span>Market intelligence</span>
+            </div>
+        </div>
+        <div class="sidebar-section-title">Workspace</div>
+        """,
+        unsafe_allow_html=True,
+    )
     page = st.sidebar.radio(
-        "Navigate",
+        "Workspace",
         ["Overview", "Trend Lab", "Skills Explorer", "Learning & Certification Path", "Logs & Quality", "Guide"],
+        label_visibility="collapsed",
     )
     filtered = filtered_frames(data)
 

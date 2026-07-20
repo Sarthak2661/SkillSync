@@ -1,0 +1,129 @@
+table fact_job_skill_mentions
+	lineageTag: 5cdd9121-e551-4974-b123-48345e3b19de
+
+	column job_skill_mention_key
+		dataType: string
+		lineageTag: 8287f134-cddd-4bef-a163-93fd94653a01
+		summarizeBy: none
+		sourceColumn: job_skill_mention_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 561f1ff6-26b0-43fc-9197-eecaeb2ebd6e
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_key
+		dataType: string
+		lineageTag: 01df42fc-c7a4-40d2-bdf1-75b984fb84ea
+		summarizeBy: none
+		sourceColumn: role_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column location_key
+		dataType: string
+		lineageTag: e16107f2-816f-4d26-9bae-522b5babe1c6
+		summarizeBy: none
+		sourceColumn: location_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_key
+		dataType: string
+		lineageTag: 0e5b3666-f586-4726-b1d5-2b66a35fe2f1
+		summarizeBy: none
+		sourceColumn: source_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_key
+		dataType: string
+		lineageTag: 60df0fab-ac6b-44a9-a0a7-61f371b19a32
+		summarizeBy: none
+		sourceColumn: time_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 0d241bbc-eacc-4ec6-9cc0-76a54a43dc88
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_key
+		dataType: string
+		lineageTag: 356feced-3179-491e-92b9-1fb9b167e2b8
+		summarizeBy: none
+		sourceColumn: job_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_confidence
+		dataType: double
+		lineageTag: 67761b0b-4936-425d-abe3-765293d62155
+		summarizeBy: sum
+		sourceColumn: skill_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column high_confidence_demand
+		dataType: int64
+		formatString: 0
+		lineageTag: f291f462-acdf-4d62-ade7-a9f8d315d2a6
+		summarizeBy: sum
+		sourceColumn: high_confidence_demand
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column mention_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 3ed71641-f67a-4aa0-9570-4a05bfdfc4c3
+		summarizeBy: sum
+		sourceColumn: mention_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_job_skill_mentions = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_job_skill_mentions.csv"),[Delimiter=",", Columns=11, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"job_skill_mention_key", type text}, {"skill_key", type text}, {"role_key", type text}, {"location_key", type text}, {"source_key", type text}, {"time_key", type text}, {"run_id", type text}, {"job_key", type text}, {"skill_confidence", type number}, {"high_confidence_demand", Int64.Type}, {"mention_count", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

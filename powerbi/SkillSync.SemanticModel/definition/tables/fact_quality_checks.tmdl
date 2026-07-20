@@ -1,0 +1,97 @@
+table fact_quality_checks
+	lineageTag: 1f7abe11-4ce1-4136-9862-06156945ac75
+
+	column run_id
+		dataType: string
+		lineageTag: 8c1b92a3-b24e-4de3-ae39-2ef25c7cd671
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column dataset
+		dataType: string
+		lineageTag: 8b7f856a-1c43-4bc9-8e9e-922c3dd476b2
+		summarizeBy: none
+		sourceColumn: dataset
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column check_name
+		dataType: string
+		lineageTag: 963ed01c-c666-4b3f-b7c1-a8aa3b7d101c
+		summarizeBy: none
+		sourceColumn: check_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 59a78df2-4064-456f-bdb3-d5b7b6638659
+		summarizeBy: none
+		sourceColumn: status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: f3bb7cc8-dcc4-4229-84d7-6224ddb5f28e
+		summarizeBy: none
+		sourceColumn: severity
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column records_checked
+		dataType: int64
+		formatString: 0
+		lineageTag: 16ead71d-749f-4f20-97c4-4c54f16b4756
+		summarizeBy: sum
+		sourceColumn: records_checked
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column failed_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 59d28655-6021-4bf9-9fa6-7d029f28612a
+		summarizeBy: sum
+		sourceColumn: failed_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column message
+		dataType: string
+		lineageTag: 7b23052f-cfcb-4bf3-9660-089a22fcfdf3
+		summarizeBy: none
+		sourceColumn: message
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_quality_checks = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_quality_checks.csv"),[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"run_id", type text}, {"dataset", type text}, {"check_name", type text}, {"status", type text}, {"severity", type text}, {"records_checked", Int64.Type}, {"failed_count", Int64.Type}, {"message", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

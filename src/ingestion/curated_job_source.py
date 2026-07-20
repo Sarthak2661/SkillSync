@@ -9,6 +9,7 @@ from src.ingestion.base import RawRecord, SourceConnector, utc_now
 
 
 DEFAULT_CURATED_JOBS_PATH = PROJECT_ROOT / "data" / "sample" / "curated_data_jobs.csv"
+DEFAULT_CURATED_TECHNOLOGY_JOBS_PATH = PROJECT_ROOT / "data" / "sample" / "curated_technology_jobs.csv"
 
 
 class CuratedDataJobsSource(SourceConnector):
@@ -45,3 +46,12 @@ def _read_curated_jobs(path: Path) -> list[dict[str, Any]]:
             row[column] = int(row[column]) if row.get(column) else None
 
     return rows
+
+
+class CuratedTechnologyJobsSource(CuratedDataJobsSource):
+    """Read the repeatable software, AI, cloud, database, IT, and consulting sample."""
+
+    source_name = "curated_technology_jobs"
+
+    def __init__(self, path: Path | None = None) -> None:
+        super().__init__(path or DEFAULT_CURATED_TECHNOLOGY_JOBS_PATH)

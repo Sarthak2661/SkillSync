@@ -1,0 +1,41 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["dim_skill","dim_role","dim_location","dim_source","fact_job_skill_mentions","fact_skill_trend_history","dim_time","mart_skill_opportunity","mart_role_skill_demand","mart_role_readiness_inputs","fact_courses","fact_certification_recommendations","fact_quality_checks","fact_course_skill_coverage","fact_jobs","_Measures","_Mes","PowerBIExportPath"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop","DevMode"]
+
+ref table dim_skill
+ref table dim_role
+ref table dim_location
+ref table dim_source
+ref table fact_job_skill_mentions
+ref table fact_skill_trend_history
+ref table DateTableTemplate_32f642cd-da41-4de5-8e69-bf98df616ac0
+ref table LocalDateTable_0ad3e36f-ddc4-4f42-8636-b9378afb02e0
+ref table dim_time
+ref table LocalDateTable_f321bc47-1436-40de-a737-05f9c4a5dd55
+ref table mart_skill_opportunity
+ref table mart_role_skill_demand
+ref table mart_role_readiness_inputs
+ref table fact_courses
+ref table LocalDateTable_43ea2555-7b42-493e-a1fa-8930ea0402fd
+ref table LocalDateTable_f5e327e5-e061-458d-9954-d047dccfff3f
+ref table fact_certification_recommendations
+ref table LocalDateTable_895a972f-f61c-4cc3-b2c3-4aaa3a3e5da5
+ref table fact_quality_checks
+ref table fact_course_skill_coverage
+ref table fact_jobs
+ref table LocalDateTable_761a5258-9aff-4463-aedc-a2e3ee10c31d
+ref table LocalDateTable_30604796-5bdf-4f76-ac66-a057edc1046a
+ref table _Mes
+
+ref cultureInfo en-US
+

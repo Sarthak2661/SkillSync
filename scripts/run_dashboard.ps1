@@ -1,17 +1,18 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-Set-Location $ProjectRoot
+$Frontend = Join-Path $ProjectRoot "frontend"
+Set-Location $Frontend
 
-$Python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
-if (-not (Test-Path $Python)) {
-    $Python = "python"
-}
-
-$Existing = netstat -ano | Select-String ":8501" | Select-String "LISTENING"
+$Existing = netstat -ano | Select-String ":3000" | Select-String "LISTENING"
 if ($Existing) {
-    Write-Host "Dashboard already appears to be running at http://127.0.0.1:8501"
+    Write-Host "SkillSync already appears to be running at http://127.0.0.1:3000"
     return
 }
 
-& $Python -m streamlit run dashboard\app.py --server.address 127.0.0.1 --server.port 8501 --server.headless true
+if (-not (Test-Path (Join-Path $Frontend "node_modules"))) {
+    & npm.cmd install
+}
+
+$env:SKILLSYNC_API_URL = if ($env:SKILLSYNC_API_URL) { $env:SKILLSYNC_API_URL } else { "http://127.0.0.1:8000" }
+& npm.cmd run dev -- --hostname 127.0.0.1 --port 3000

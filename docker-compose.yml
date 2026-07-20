@@ -1,8 +1,8 @@
 x-skillsync-env: &skillsync-env
   MARKET_INTEL_DB_URL: "${MARKET_INTEL_DOCKER_DB_URL:-postgresql://postgres:postgres@postgres:5432/job_market_intel}"
   MARKET_INTEL_LOAD_TO_POSTGRES: "${MARKET_INTEL_LOAD_TO_POSTGRES:-true}"
-  MARKET_INTEL_JOB_SOURCE_MODE: "${MARKET_INTEL_JOB_SOURCE_MODE:-all}"
-  MARKET_INTEL_COURSE_SOURCE_MODE: "${MARKET_INTEL_COURSE_SOURCE_MODE:-all}"
+  MARKET_INTEL_JOB_SOURCE_MODE: "${MARKET_INTEL_JOB_SOURCE_MODE:-curated}"
+  MARKET_INTEL_COURSE_SOURCE_MODE: "${MARKET_INTEL_COURSE_SOURCE_MODE:-hybrid}"
   MARKET_INTEL_COURSE_SOURCE_LIMIT: "${MARKET_INTEL_COURSE_SOURCE_LIMIT:-200}"
   MARKET_INTEL_JOB_API_SOURCE_LIMIT: "${MARKET_INTEL_JOB_API_SOURCE_LIMIT:-25}"
   MARKET_INTEL_YOUTUBE_API_KEY: "${MARKET_INTEL_YOUTUBE_API_KEY:-}"
@@ -10,6 +10,7 @@ x-skillsync-env: &skillsync-env
   MARKET_INTEL_ADZUNA_APP_ID: "${MARKET_INTEL_ADZUNA_APP_ID:-}"
   MARKET_INTEL_ADZUNA_APP_KEY: "${MARKET_INTEL_ADZUNA_APP_KEY:-}"
   MARKET_INTEL_ADZUNA_COUNTRY: "${MARKET_INTEL_ADZUNA_COUNTRY:-us}"
+  MARKET_INTEL_CORS_ORIGINS: "${MARKET_INTEL_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}"
 
 x-skillsync-app: &skillsync-app
   build:
@@ -57,11 +58,11 @@ services:
     container_name: skillsync-dbt
     profiles: ["analytics"]
     environment:
-      DBT_POSTGRES_HOST: postgres
-      DBT_POSTGRES_PORT: "5432"
-      DBT_POSTGRES_USER: postgres
-      DBT_POSTGRES_PASSWORD: postgres
-      DBT_POSTGRES_DB: job_market_intel
+      DBT_POSTGRES_HOST: "${DBT_POSTGRES_HOST:-postgres}"
+      DBT_POSTGRES_PORT: "${DBT_POSTGRES_PORT:-5432}"
+      DBT_POSTGRES_USER: "${DBT_POSTGRES_USER:-postgres}"
+      DBT_POSTGRES_PASSWORD: "${DBT_POSTGRES_PASSWORD:-postgres}"
+      DBT_POSTGRES_DB: "${DBT_POSTGRES_DB:-job_market_intel}"
       DBT_PROFILES_DIR: /app/dbt
     volumes:
       - ./dbt:/app/dbt
@@ -88,8 +89,28 @@ services:
       retries: 3
 
   dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: skillsync-frontend
+    environment:
+      SKILLSYNC_API_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  streamlit-dashboard:
     <<: *skillsync-app
-    container_name: skillsync-dashboard
+    profiles: ["legacy"]
+    container_name: skillsync-streamlit-dashboard
     command: streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true
     ports:
       - "8501:8501"
@@ -97,7 +118,7 @@ services:
       pipeline-init:
         condition: service_completed_successfully
       api:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   market_intel_pgdata:

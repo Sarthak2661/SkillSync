@@ -5,9 +5,9 @@ The current release covers ingestion, quality checks, warehouse loading, orchest
 ## Data Coverage
 
 - Normalize salary currency and geography before comparing wage signals.
-- Add another documented job API with richer data-role descriptions.
+- Add geography and seniority normalization for the existing documented job APIs.
 - Add parser fixtures whenever a source connector changes.
-- Tighten role classification for Analyst, BI, Engineer, Scientist, and ML/AI roles.
+- Measure classifier precision by role family against a labeled fixture set.
 
 ## Trends And Scoring
 
@@ -19,10 +19,10 @@ The current release covers ingestion, quality checks, warehouse loading, orchest
 
 - Add PostgreSQL integration tests to CI with a temporary service container.
 - Add warehouse views for Power BI direct query.
-- Consider dbt only if warehouse transformations become the primary modeling layer.
+- Add dbt freshness tests and source-level observability to the public CI evidence.
 
 ## Dashboard
 
-- Add saved role presets for common data-career paths.
+- Add saved role presets before introducing personalized career plans or user sessions.
 - Surface low-coverage warnings beside affected charts.
-- Add a weekly summary after at least seven daily snapshots are available.
+- Expand the weekly briefing once enough daily snapshots exist for stable week-over-week comparisons.

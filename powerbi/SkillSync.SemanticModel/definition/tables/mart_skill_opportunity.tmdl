@@ -1,0 +1,341 @@
+table mart_skill_opportunity
+	lineageTag: 5990c434-b9cd-42b2-a96d-7cdfaa4b9349
+
+	column run_id
+		dataType: string
+		lineageTag: 816e141a-bbfc-4550-acac-025677937ee7
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill
+		dataType: string
+		lineageTag: 3da40263-cfec-4ff1-9f4f-b8b7148772ca
+		summarizeBy: none
+		sourceColumn: skill
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		lineageTag: eeb070a7-b4bf-4c45-b712-9571be7b0080
+		summarizeBy: none
+		sourceColumn: category
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_demand
+		dataType: int64
+		formatString: 0
+		lineageTag: 8d32d544-bae5-435c-82b1-b7b539d29d59
+		summarizeBy: sum
+		sourceColumn: job_demand
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_supply
+		dataType: int64
+		formatString: 0
+		lineageTag: c27f35b1-9a65-4a33-bc74-2ae8296f4362
+		summarizeBy: sum
+		sourceColumn: course_supply
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column gap_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 5f84c6be-59f9-499d-b1af-1650942c0e68
+		summarizeBy: sum
+		sourceColumn: gap_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column demand_supply_ratio
+		dataType: double
+		lineageTag: 1623ec20-64dc-4d5d-9f83-d23489359301
+		summarizeBy: sum
+		sourceColumn: demand_supply_ratio
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column demand_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 5ff79c03-d37b-4c6b-bc95-9cf2bb2dbf36
+		summarizeBy: sum
+		sourceColumn: demand_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column growth_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 6be3534f-1589-4e1d-92a7-7090f7e5935d
+		summarizeBy: sum
+		sourceColumn: growth_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_premium_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 58a68890-4068-4a65-9a5f-84d503621381
+		summarizeBy: sum
+		sourceColumn: salary_premium_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_supply_score
+		dataType: int64
+		formatString: 0
+		lineageTag: bd080660-7537-4199-99b7-37c6841397a1
+		summarizeBy: sum
+		sourceColumn: course_supply_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column saturation_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 72ef3967-1289-42b3-8d20-0b79d68782aa
+		summarizeBy: sum
+		sourceColumn: saturation_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column opportunity_index
+		dataType: int64
+		formatString: 0
+		lineageTag: c5f86673-7e60-45f2-b683-0dab5d0f04e5
+		summarizeBy: sum
+		sourceColumn: opportunity_index
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column opportunity_label
+		dataType: string
+		lineageTag: 3e859dcd-819f-450c-9962-88fe1227287e
+		summarizeBy: none
+		sourceColumn: opportunity_label
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column market_direction
+		dataType: string
+		lineageTag: 9ac3cebe-3caf-456d-a352-347358e2a897
+		summarizeBy: none
+		sourceColumn: market_direction
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_job_roles
+		dataType: string
+		lineageTag: 5a163b72-d011-4794-887c-78cabc810cd9
+		summarizeBy: none
+		sourceColumn: target_job_roles
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column taxonomy_source
+		dataType: string
+		lineageTag: 978898cc-ed6d-43a9-aa7d-d0869b17677d
+		summarizeBy: none
+		sourceColumn: taxonomy_source
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_evidence_status
+		dataType: string
+		lineageTag: 69bd31ed-3c29-4500-b6cf-799be3c2b0b8
+		summarizeBy: none
+		sourceColumn: onet_evidence_status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_workplace_examples
+		dataType: string
+		lineageTag: c4074548-a8f0-4b2a-adf8-45eb6975be6b
+		summarizeBy: none
+		sourceColumn: onet_workplace_examples
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_soc_codes
+		dataType: string
+		lineageTag: ee2e18c6-1494-4c0e-abd8-617600dd78ce
+		summarizeBy: none
+		sourceColumn: onet_soc_codes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_occupations
+		dataType: string
+		lineageTag: f5e79a2b-95bd-4ce0-aad5-588fd9016e4c
+		summarizeBy: none
+		sourceColumn: onet_occupations
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_wage_median_annual
+		dataType: int64
+		formatString: 0
+		lineageTag: 1521ad6f-a4e2-4e1c-8de7-0d6e02786095
+		summarizeBy: sum
+		sourceColumn: onet_wage_median_annual
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_growth_outlook
+		dataType: string
+		lineageTag: 5a067e49-8146-4d1d-8a97-5445b3740645
+		summarizeBy: none
+		sourceColumn: onet_growth_outlook
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column bls_growth_percent
+		dataType: double
+		lineageTag: 5e77b126-db37-4252-a656-cf3052031cc3
+		summarizeBy: sum
+		sourceColumn: bls_growth_percent
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column bls_wage_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e066b7f-77a8-484a-a31c-f029d7019b1b
+		summarizeBy: sum
+		sourceColumn: bls_wage_year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column bls_projection_period
+		dataType: string
+		lineageTag: e31cea88-65d8-4067-961a-12aaa945fca6
+		summarizeBy: none
+		sourceColumn: bls_projection_period
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_projected_openings
+		dataType: int64
+		formatString: 0
+		lineageTag: bc56e86c-d3ab-4dc1-837c-79122a0bf645
+		summarizeBy: sum
+		sourceColumn: onet_projected_openings
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_reference_url
+		dataType: string
+		lineageTag: 8af9f2df-873f-4ffa-852b-ac01bb9b2033
+		summarizeBy: none
+		sourceColumn: onet_reference_url
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: d2dd2e11-828b-4748-bcda-d4f12d2cf0a2
+		summarizeBy: none
+		sourceColumn: status
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 9b466c1f-b57a-4a0a-8dfe-01e6d6517907
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_families
+		dataType: string
+		lineageTag: 54d7a7b8-f2dc-49d2-b67f-62867a16c84e
+		summarizeBy: none
+		sourceColumn: role_families
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_skill_opportunity = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\mart_skill_opportunity.csv"),[Delimiter=",", Columns=31, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"run_id", type text}, {"skill", type text}, {"category", type text}, {"job_demand", Int64.Type}, {"course_supply", Int64.Type}, {"gap_score", Int64.Type}, {"demand_supply_ratio", type number}, {"demand_score", Int64.Type}, {"growth_score", Int64.Type}, {"salary_premium_score", Int64.Type}, {"course_supply_score", Int64.Type}, {"saturation_score", Int64.Type}, {"opportunity_index", Int64.Type}, {"opportunity_label", type text}, {"market_direction", type text}, {"target_job_roles", type text}, {"taxonomy_source", type text}, {"onet_evidence_status", type text}, {"onet_workplace_examples", type text}, {"role_families", type text}, {"onet_soc_codes", type text}, {"onet_occupations", type text}, {"onet_wage_median_annual", Int64.Type}, {"onet_growth_outlook", type text}, {"bls_growth_percent", type number}, {"bls_wage_year", Int64.Type}, {"bls_projection_period", type text}, {"onet_projected_openings", Int64.Type}, {"onet_reference_url", type text}, {"status", type text}, {"skill_key", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

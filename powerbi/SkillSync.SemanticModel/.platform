@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "SkillSync"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "63b735c7-582a-4f44-82ed-201243e78574"
+  }
+}

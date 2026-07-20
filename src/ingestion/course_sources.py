@@ -1,21 +1,34 @@
 from __future__ import annotations
 
+import csv
+from pathlib import Path
 from typing import Any
 
 import requests
 
 from src.config.settings import settings
-from src.ingestion.base import RawRecord, SourceConnector, utc_now
+from src.ingestion.base import RawRecord, SourceConnector, SourceFetchStatus, fetch_with_status, utc_now
 
 
-DATA_ROLE_KEYWORDS = {
+TECHNOLOGY_ROLE_KEYWORDS = {
     "data-analyst",
     "data-engineer",
     "data-scientist",
     "ai-engineer",
+    "developer",
+    "software-engineer",
+    "cloud-engineer",
+    "devops-engineer",
+    "security-engineer",
+    "security-operations-analyst",
+    "network-engineer",
+    "database-administrator",
+    "administrator",
+    "solution-architect",
+    "technology-consultant",
 }
 
-DATA_SUBJECT_KEYWORDS = {
+TECHNOLOGY_SUBJECT_KEYWORDS = {
     "data-analysis",
     "data-engineering",
     "data-science",
@@ -24,9 +37,19 @@ DATA_SUBJECT_KEYWORDS = {
     "databases",
     "analytics",
     "visualization",
+    "software-development",
+    "web-development",
+    "app-development",
+    "cloud-computing",
+    "devops",
+    "cybersecurity",
+    "security",
+    "networking",
+    "system-administration",
+    "infrastructure",
 }
 
-DATA_TEXT_KEYWORDS = {
+TECHNOLOGY_TEXT_KEYWORDS = {
     "analytics",
     "data analysis",
     "data analytics",
@@ -40,6 +63,27 @@ DATA_TEXT_KEYWORDS = {
     "fabric",
     "azure synapse",
     "spark",
+    "software development",
+    "software engineering",
+    "web development",
+    "javascript",
+    "typescript",
+    "react",
+    "node.js",
+    "java",
+    ".net",
+    "cloud computing",
+    "devops",
+    "kubernetes",
+    "terraform",
+    "cybersecurity",
+    "information security",
+    "networking",
+    "system administration",
+    "database administration",
+    "oracle database",
+    "it service management",
+    "solution architecture",
 }
 
 
@@ -158,7 +202,7 @@ OPEN_COURSE_CATALOG = [
         "roles": "data-engineer|analytics-engineer",
         "products": "airflow|dbt|docker",
         "last_modified": "2026-04-12",
-        "url": "https://airflow.apache.org/docs/apache-airflow/stable/tutorial/index.html",
+        "url": "https://github.com/DataTalksClub/data-engineering-zoomcamp",
     },
     {
         "external_id": "open-course-cloud-data-platforms",
@@ -278,10 +322,32 @@ UNIVERSITY_OPEN_CATALOG = [
         "roles": "data-analyst|bi-analyst",
         "products": "tableau|power-bi",
         "last_modified": "2026-03-22",
-        "url": "https://www.coursera.org/browse/data-science/data-analysis",
+        "url": "https://ocw.mit.edu/search/?q=data%20visualization",
     },
 ]
 
+
+class OfficialLearningCatalogSource(SourceConnector):
+    """Verified official learning pages stored locally for repeatable runs."""
+
+    source_name = "official_learning_catalog"
+    source_type = "course_listing"
+    catalog_path = Path(__file__).resolve().parents[2] / "data" / "sample" / "official_learning_catalog.csv"
+
+    def fetch(self) -> list[RawRecord]:
+        collected_at = utc_now()
+        with self.catalog_path.open(encoding="utf-8", newline="") as handle:
+            items = list(csv.DictReader(handle))
+        return [
+            RawRecord(
+                source_name=self.source_name,
+                source_type=self.source_type,
+                source_url=item["url"],
+                collected_at=collected_at,
+                payload=item,
+            )
+            for item in items
+        ]
 
 class OpenCourseCatalogSource(SourceConnector):
     """Open learning resources used for repeatable local runs."""
@@ -420,14 +486,15 @@ class CompositeCourseSource(SourceConnector):
 
     def __init__(self, sources: list[SourceConnector]) -> None:
         self.sources = sources
+        self.fetch_statuses: list[SourceFetchStatus] = []
 
     def fetch(self) -> list[RawRecord]:
         records: list[RawRecord] = []
+        self.fetch_statuses = []
         for source in self.sources:
-            try:
-                records.extend(source.fetch())
-            except requests.RequestException:
-                continue
+            source_records, status = fetch_with_status(source, (requests.RequestException, ValueError))
+            self.fetch_statuses.append(status)
+            records.extend(source_records)
         return records
 
 
@@ -506,21 +573,10 @@ def is_relevant_module(module: dict[str, Any]) -> bool:
         ]
     ).lower()
 
-    role_match = bool(roles & DATA_ROLE_KEYWORDS)
-    strong_subject_match = bool(
-        subjects
-        & {
-            "data-analysis",
-            "data-science",
-            "machine-learning",
-            "artificial-intelligence",
-            "databases",
-            "analytics",
-            "visualization",
-        }
-    )
+    role_match = bool(roles & TECHNOLOGY_ROLE_KEYWORDS)
+    strong_subject_match = bool(subjects & TECHNOLOGY_SUBJECT_KEYWORDS)
     broad_subject_match = bool(subjects & {"data-engineering"})
-    text_match = any(keyword in text for keyword in DATA_TEXT_KEYWORDS)
+    text_match = any(keyword in text for keyword in TECHNOLOGY_TEXT_KEYWORDS)
     product_match = any(
         product in products
         for product in {

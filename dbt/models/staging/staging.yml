@@ -8,6 +8,12 @@ models:
         tests: [not_null, unique]
       - name: run_id
         tests: [not_null]
+      - name: role_category
+        tests: [not_null]
+      - name: role_family
+        tests:
+          - accepted_values:
+              values: ['Data & Analytics', 'Software Engineering', 'AI & Machine Learning', 'Cloud & Platform', 'Database', 'IT & Security', 'Technology Consulting', 'Other Technology']
       - name: source_confidence
         tests:
           - accepted_values:

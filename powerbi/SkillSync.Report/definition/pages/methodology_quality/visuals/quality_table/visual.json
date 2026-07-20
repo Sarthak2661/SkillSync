@@ -1,0 +1,166 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "quality_table",
+  "position": {
+    "x": 32,
+    "y": 204,
+    "z": 300,
+    "height": 226,
+    "width": 1216,
+    "tabOrder": 200
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "dataset"
+                }
+              },
+              "queryRef": "fact_quality_checks.dataset",
+              "nativeQueryRef": "Dataset"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "check_name"
+                }
+              },
+              "queryRef": "fact_quality_checks.check_name",
+              "nativeQueryRef": "Check"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "status"
+                }
+              },
+              "queryRef": "fact_quality_checks.status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "severity"
+                }
+              },
+              "queryRef": "fact_quality_checks.severity",
+              "nativeQueryRef": "Severity"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "failed_count"
+                }
+              },
+              "queryRef": "fact_quality_checks.failed_count",
+              "nativeQueryRef": "Failed records"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_quality_checks"
+                    }
+                  },
+                  "Property": "message"
+                }
+              },
+              "queryRef": "fact_quality_checks.message",
+              "nativeQueryRef": "Message"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Validation results'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -12,37 +12,40 @@ SOURCE_CONFIDENCE_LABELS = (
 
 SOURCE_CONFIDENCE_BY_SOURCE = {
     "microsoft_learn_catalog": "live_verified",
+    "freecodecamp_curriculum": "live_verified",
+    "github_learning_paths": "live_broad",
     "adzuna_jobs": "live_verified",
     "arbeitnow_jobs": "live_verified",
     "remotive_jobs": "live_verified",
-    "ycombinator_jobs": "live_broad",
+    "hackernews_who_is_hiring": "live_broad",
     "curated_data_jobs": "curated_demo",
+    "curated_technology_jobs": "curated_demo",
     "startup_data_jobs": "curated_demo",
     "enterprise_analytics_jobs": "curated_demo",
     "open_course_catalog": "curated_demo",
+    "official_learning_catalog": "curated_demo",
     "vendor_docs_catalog": "curated_demo",
     "university_open_catalog": "curated_demo",
     "youtube_learning": "fallback_learning",
     "seed_course_listings": "fallback_learning",
     "seed_job_postings": "test_source",
-    "realpython_fake_jobs": "test_source",
 }
 
 SOURCE_VIEW_OPTIONS = {
     "Demo-safe data": {
-        "jobs": {"seed_job_postings", "curated_data_jobs", "startup_data_jobs", "enterprise_analytics_jobs"},
-        "courses": {"seed_course_listings", "open_course_catalog", "vendor_docs_catalog", "university_open_catalog"},
+        "jobs": {"seed_job_postings", "curated_data_jobs", "curated_technology_jobs", "startup_data_jobs", "enterprise_analytics_jobs"},
+        "courses": {"seed_course_listings", "open_course_catalog", "official_learning_catalog", "vendor_docs_catalog", "university_open_catalog"},
         "description": "Repeatable local/sample records that are safe for demos and screenshots.",
     },
     "Live sources only": {
-        "jobs": {"adzuna_jobs", "arbeitnow_jobs", "remotive_jobs"},
-        "courses": {"microsoft_learn_catalog", "youtube_learning"},
+        "jobs": {"adzuna_jobs", "arbeitnow_jobs", "remotive_jobs", "hackernews_who_is_hiring"},
+        "courses": {"microsoft_learn_catalog", "freecodecamp_curriculum", "github_learning_paths"},
         "description": "Records collected from official/public job APIs and learning APIs in the latest run.",
     },
     "Curated market snapshot": {
-        "jobs": {"curated_data_jobs", "startup_data_jobs", "enterprise_analytics_jobs"},
-        "courses": {"open_course_catalog", "vendor_docs_catalog", "university_open_catalog"},
-        "description": "Cleaner data-role job descriptions plus maintained learning catalogs for portfolio screenshots.",
+        "jobs": {"curated_data_jobs", "curated_technology_jobs", "startup_data_jobs", "enterprise_analytics_jobs"},
+        "courses": {"open_course_catalog", "official_learning_catalog", "vendor_docs_catalog", "university_open_catalog"},
+        "description": "Maintained technology-role examples and learning catalogs for reliable portfolio screenshots.",
     },
     "All sources": {
         "jobs": None,

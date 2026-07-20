@@ -10,18 +10,21 @@ Start Docker Desktop, then run this from the project folder:
 docker compose up --build
 ```
 
-This starts PostgreSQL, runs the pipeline once, exports Power BI CSV files, starts FastAPI, and starts the Streamlit dashboard.
+This starts PostgreSQL, runs the pipeline once, exports Power BI CSV files, starts FastAPI, and starts the Next.js frontend.
 
 Open:
 
 - FastAPI docs: `http://127.0.0.1:8000/docs`
-- Dashboard: `http://127.0.0.1:8501`
+- Product UI: `http://127.0.0.1:3000`
 
 Manual steps you may still need:
 
 - Start Docker Desktop before running Compose.
 - Add Adzuna or YouTube API keys to `.env` only if you want those optional live sources.
-- If ports `5434`, `8000`, or `8501` are already busy, stop the conflicting local service or change the port mapping in `docker-compose.yml`.
+- Add a GitHub token only if you need higher rate limits for freeCodeCamp, learning-path, or practice-project requests.
+- Request Credential Engine Graph Search approval before setting its optional API key.
+- If ports `5434`, `8000`, or `3000` are already busy, stop the conflicting local service or change the port mapping in `docker-compose.yml`.
+
 ## First Run
 
 ```powershell
@@ -29,6 +32,9 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 copy .env.example .env
+cd frontend
+npm.cmd install
+cd ..
 python pipeline.py
 python export_powerbi.py
 python scripts\smoke_check.py
@@ -54,7 +60,7 @@ Terminal 2:
 .\scripts\run_dashboard.ps1
 ```
 
-Open `http://127.0.0.1:8501/`.
+Open `http://127.0.0.1:3000/`.
 
 If PowerShell blocks scripts, use the `.cmd` files in `scripts/` instead.
 
@@ -67,7 +73,14 @@ The default `.env.example` uses curated jobs and hybrid courses so a first run i
 ```text
 MARKET_INTEL_JOB_SOURCE_MODE=all
 MARKET_INTEL_COURSE_SOURCE_MODE=all
+MARKET_INTEL_CERTIFICATION_SOURCE_MODE=all
 MARKET_INTEL_COURSE_SOURCE_LIMIT=200
+```
+
+`all` still works without a Credential Engine key; that connector is skipped. To enable it, add the approved key to `.env`:
+
+```text
+MARKET_INTEL_CREDENTIAL_ENGINE_API_KEY=<your-approved-key>
 ```
 
 To restore the dependable default modes, use:
@@ -79,15 +92,15 @@ python pipeline.py
 python export_powerbi.py
 ```
 
-The small `3 jobs / 9 courses` result usually means the pipeline ran with the fallback/sample modes instead of the full source mix.
+The small `3 jobs / 9 courses` result usually means the pipeline ran with the seed job and fallback course modes. Restore `curated` jobs and `hybrid` courses for the repeatable portfolio dataset.
 
-## If Port 8000 Or 8501 Is Busy
+## If Port 8000 Or 3000 Is Busy
 
 Find the process using the port:
 
 ```powershell
 netstat -ano | findstr :8000
-netstat -ano | findstr :8501
+netstat -ano | findstr :3000
 ```
 
 Then stop the process by PID:
@@ -147,11 +160,28 @@ MARKET_INTEL_LOAD_TO_POSTGRES=true
 ```
 
 The Airflow compose file points the warehouse URL at the Docker `postgres` service automatically.
+
+## dbt With A Host PostgreSQL Database
+
+The default Compose setup loads and models the same Docker PostgreSQL database. If `MARKET_INTEL_DOCKER_DB_URL` points to PostgreSQL 17 on Windows, set the dbt connection to the same host database before running dbt:
+
+```powershell
+$env:DBT_POSTGRES_HOST="host.docker.internal"
+$env:DBT_POSTGRES_PORT="5432"
+$env:DBT_POSTGRES_USER="postgres"
+$env:DBT_POSTGRES_PASSWORD="<your-password>"
+$env:DBT_POSTGRES_DB="job_market_intel"
+docker compose --profile analytics run --rm dbt build
+```
+
+Without these matching values, the pipeline can load Windows PostgreSQL while dbt tests the isolated Docker database.
+
 ## Quick QA Checklist
 
 - `python -m unittest discover -s tests`
 - `python scripts\smoke_check.py`
 - `python export_powerbi.py`
-- Dashboard opens at `http://127.0.0.1:8501/`
+- `cd frontend; npm.cmd run typecheck; npm.cmd run lint; npm.cmd run build`
+- Next.js product UI opens at `http://127.0.0.1:3000/`
 - FastAPI docs open at `http://127.0.0.1:8000/docs`
 - `logs/pipeline_runs.csv` has a new timestamped row after each pipeline run

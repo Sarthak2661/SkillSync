@@ -1,13 +1,7 @@
 with mentions as (
     select
         m.*,
-        case
-            when lower(j.title) ~ '(engineer|etl|pipeline|warehouse)' then 'Data Engineering'
-            when lower(j.title) ~ '(scientist|machine learning|(^| )ml |(^| )ai )' then 'Data Science'
-            when lower(j.title) ~ '(analyst|analytics|business intelligence|(^| )bi )' then 'Data Analytics'
-            when lower(j.title) ~ '(architect|platform)' then 'Data Architecture'
-            else 'Other Data Role'
-        end as role_name,
+        j.role_category as role_name,
         j.location
     from {{ ref('int_skill_mentions') }} m
     join {{ ref('stg_jobs') }} j on m.record_key = j.job_key

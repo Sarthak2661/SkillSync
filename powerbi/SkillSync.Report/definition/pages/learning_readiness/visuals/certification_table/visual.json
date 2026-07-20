@@ -1,0 +1,166 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "certification_table",
+  "position": {
+    "x": 32,
+    "y": 434,
+    "z": 300,
+    "height": 254,
+    "width": 1216,
+    "tabOrder": 210
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "skill"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.skill",
+              "nativeQueryRef": "Skill"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "certification_name"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.certification_name",
+              "nativeQueryRef": "Certification"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "provider"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.provider",
+              "nativeQueryRef": "Provider"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "free_or_paid"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.free_or_paid",
+              "nativeQueryRef": "Cost type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "role_families"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.role_families",
+              "nativeQueryRef": "Role families"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_certification_recommendations"
+                    }
+                  },
+                  "Property": "recommendation_score"
+                }
+              },
+              "queryRef": "fact_certification_recommendations.recommendation_score",
+              "nativeQueryRef": "Recommendation score"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Certification recommendations'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

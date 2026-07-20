@@ -25,6 +25,8 @@ DDL_STATEMENTS = (
         title TEXT,
         company TEXT,
         location TEXT,
+        role_category TEXT,
+        role_family TEXT,
         remote_type TEXT,
         salary_min NUMERIC,
         salary_max NUMERIC,
@@ -57,6 +59,7 @@ DDL_STATEMENTS = (
         last_modified TEXT,
         url TEXT,
         skills TEXT,
+        role_families TEXT,
         skill_categories TEXT,
         skill_match_terms TEXT,
         skill_confidence NUMERIC,
@@ -87,6 +90,7 @@ DDL_STATEMENTS = (
         taxonomy_source TEXT,
         onet_evidence_status TEXT,
         onet_workplace_examples TEXT,
+        role_families TEXT,
         onet_soc_codes TEXT,
         onet_occupations TEXT,
         onet_wage_median_annual NUMERIC,
@@ -102,8 +106,12 @@ DDL_STATEMENTS = (
     );
     """,
     f"ALTER TABLE {SCHEMA_NAME}.job_postings ADD COLUMN IF NOT EXISTS source_confidence TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.job_postings ADD COLUMN IF NOT EXISTS role_category TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.job_postings ADD COLUMN IF NOT EXISTS role_family TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.course_listings ADD COLUMN IF NOT EXISTS source_confidence TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS demand_score INT;",
+    f"ALTER TABLE {SCHEMA_NAME}.course_listings ADD COLUMN IF NOT EXISTS role_families TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS role_families TEXT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS growth_score INT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS salary_premium_score INT;",
     f"ALTER TABLE {SCHEMA_NAME}.skill_gap_summary ADD COLUMN IF NOT EXISTS course_supply_score INT;",
@@ -150,6 +158,7 @@ DDL_STATEMENTS = (
         salary_max_avg NUMERIC,
         location TEXT NOT NULL,
         role_category TEXT NOT NULL,
+        role_family TEXT,
         loaded_at TIMESTAMPTZ DEFAULT NOW(),
         PRIMARY KEY (run_id, source_name, skill, location, role_category)
     );
@@ -166,6 +175,10 @@ DDL_STATEMENTS = (
         target_roles TEXT,
         url TEXT,
         priority_score INT,
+        role_families TEXT,
+        source_name TEXT,
+        source_confidence TEXT,
+        last_verified DATE,
         opportunity_index NUMERIC,
         opportunity_label TEXT,
         job_demand NUMERIC,
@@ -176,6 +189,11 @@ DDL_STATEMENTS = (
         PRIMARY KEY (run_id, skill, certification_name)
     );
     """,
+    f"ALTER TABLE {SCHEMA_NAME}.certification_recommendations ADD COLUMN IF NOT EXISTS source_name TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.certification_recommendations ADD COLUMN IF NOT EXISTS source_confidence TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.certification_recommendations ADD COLUMN IF NOT EXISTS last_verified DATE;",
+    f"ALTER TABLE {SCHEMA_NAME}.skill_trend_history ADD COLUMN IF NOT EXISTS role_family TEXT;",
+    f"ALTER TABLE {SCHEMA_NAME}.certification_recommendations ADD COLUMN IF NOT EXISTS role_families TEXT;",
 )
 
 

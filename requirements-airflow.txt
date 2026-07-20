@@ -1,2 +1,2 @@
-pydantic-settings==2.7.1
-dbt-postgres==1.9.1
+# Airflow runs from the apache/airflow base image.
+# Put only Airflow-container-specific extras here.

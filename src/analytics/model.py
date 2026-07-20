@@ -5,6 +5,7 @@ from typing import Any
 
 import pandas as pd
 
+from src.domain.technology import role_family_for_role
 from src.etl.io import latest_processed_file, read_all_dataframes, read_latest_dataframe
 
 
@@ -17,13 +18,36 @@ DATASET_NAMES = {
     "quality": "quality_summary",
 }
 
+LEGACY_ROLE_CATEGORIES = {
+    "Data Analytics": "Data Analyst",
+    "Data Architecture": "Data Engineer",
+    "Data Engineering": "Data Engineer",
+    "Data Science": "Data Scientist",
+    "Other Data Role": "Other Technology Role",
+}
+
 
 def load_latest_outputs() -> dict[str, pd.DataFrame]:
     return {name: read_latest_dataframe(dataset) for name, dataset in DATASET_NAMES.items()}
 
 
 def load_trend_history() -> pd.DataFrame:
-    return read_all_dataframes(DATASET_NAMES["skill_trends"])
+    return normalize_trend_roles(read_all_dataframes(DATASET_NAMES["skill_trends"]))
+
+
+def normalize_trend_roles(trends: pd.DataFrame) -> pd.DataFrame:
+    """Bring historical role labels forward without rewriting stored snapshots."""
+    if trends.empty or "role_category" not in trends:
+        return trends.copy()
+
+    out = trends.copy()
+    out["role_category"] = out["role_category"].replace(LEGACY_ROLE_CATEGORIES)
+    if "role_family" not in out:
+        out["role_family"] = ""
+
+    missing_family = out["role_family"].isna() | out["role_family"].astype(str).str.strip().isin(["", "nan"])
+    out.loc[missing_family, "role_family"] = out.loc[missing_family, "role_category"].map(role_family_for_role)
+    return out
 
 
 def latest_run_id() -> str | None:
@@ -47,7 +71,9 @@ def build_kpis(outputs: dict[str, pd.DataFrame]) -> dict[str, Any]:
     courses = outputs["courses"]
     gaps = outputs["skill_gaps"]
     quality = outputs["quality"]
-    trends = load_trend_history()
+    trends = outputs.get("trend_history")
+    if trends is None:
+        trends = load_trend_history()
 
     high_opportunity = _filter_eq(gaps, "status", "High opportunity")
     warnings = quality[quality["status"].isin(["warning", "fail"])] if "status" in quality else pd.DataFrame()
@@ -75,12 +101,14 @@ def filter_jobs(
     skill: str | None = None,
     company: str | None = None,
     remote_type: str | None = None,
+    role_family: str | None = None,
     limit: int = 100,
 ) -> pd.DataFrame:
     df = jobs.copy()
     df = _contains_skill(df, skill)
     df = _contains_text(df, "company", company)
     df = _equals_text(df, "remote_type", remote_type)
+    df = _equals_text(df, "role_family", role_family)
     return df.head(limit)
 
 
@@ -89,12 +117,14 @@ def filter_courses(
     skill: str | None = None,
     platform: str | None = None,
     level: str | None = None,
+    role_family: str | None = None,
     limit: int = 100,
 ) -> pd.DataFrame:
     df = courses.copy()
     df = _contains_skill(df, skill)
     df = _contains_text(df, "platform", platform)
     df = _contains_text(df, "level", level)
+    df = _contains_pipe_value(df, "role_families", role_family)
     return df.head(limit)
 
 
@@ -105,12 +135,14 @@ def filter_skill_gaps(
     min_gap: int | None = None,
     min_opportunity: int | None = None,
     label: str | None = None,
+    role_family: str | None = None,
     limit: int = 100,
 ) -> pd.DataFrame:
     df = gaps.copy()
     df = _contains_text(df, "status", status)
     df = _contains_text(df, "category", category)
     df = _contains_text(df, "opportunity_label", label)
+    df = _contains_pipe_value(df, "role_families", role_family)
     if min_gap is not None and "gap_score" in df:
         df = df[pd.to_numeric(df["gap_score"], errors="coerce").fillna(0) >= min_gap]
     if min_opportunity is not None and "opportunity_index" in df:
@@ -124,6 +156,7 @@ def filter_skill_trends(
     source_name: str | None = None,
     location: str | None = None,
     role_category: str | None = None,
+    role_family: str | None = None,
     limit: int = 1000,
 ) -> pd.DataFrame:
     df = trends.copy()
@@ -131,6 +164,7 @@ def filter_skill_trends(
     df = _contains_text(df, "source_name", source_name)
     df = _contains_text(df, "location", location)
     df = _contains_text(df, "role_category", role_category)
+    df = _equals_text(df, "role_family", role_family)
     if "run_timestamp" in df:
         df = df.sort_values(["run_timestamp", "skill"])
     return df.head(limit)
@@ -158,7 +192,15 @@ def source_summary(outputs: dict[str, pd.DataFrame]) -> list[dict[str, Any]]:
         df = outputs[dataset_name]
         if df.empty or "source_name" not in df:
             continue
-        grouped = df.groupby("source_name", dropna=False).size().reset_index(name="record_count")
+        if "source_confidence" in df:
+            grouped = (
+                df.groupby(["source_name", "source_confidence"], dropna=False)
+                .size()
+                .reset_index(name="record_count")
+            )
+        else:
+            grouped = df.groupby("source_name", dropna=False).size().reset_index(name="record_count")
+            grouped["source_confidence"] = "unclassified"
         grouped.insert(0, "dataset", dataset_name)
         rows.extend(dataframe_to_records(grouped))
     return rows
@@ -188,7 +230,6 @@ def clean_record(record: dict[str, Any]) -> dict[str, Any]:
         else:
             clean[key] = value
     return clean
-
 
 def _coverage(df: pd.DataFrame) -> float:
     if df.empty or "skill_count" not in df:
@@ -221,6 +262,13 @@ def _contains_text(df: pd.DataFrame, column: str, value: str | None) -> pd.DataF
     if not value or df.empty or column not in df:
         return df
     return df[df[column].fillna("").astype(str).str.contains(value, case=False, regex=False)]
+
+
+def _contains_pipe_value(df: pd.DataFrame, column: str, value: str | None) -> pd.DataFrame:
+    if not value or df.empty or column not in df:
+        return df
+    pattern = rf"(?:^|\|){re.escape(value)}(?:\||$)"
+    return df[df[column].fillna("").astype(str).str.contains(pattern, case=False, regex=True)]
 
 
 def _equals_text(df: pd.DataFrame, column: str, value: str | None) -> pd.DataFrame:

@@ -12,17 +12,30 @@ TRUSTED_JOB_DOMAINS = {
     "adzuna.com",
     "arbeitnow.com",
     "example.com",
-    "realpython.github.io",
+    "news.ycombinator.com",
     "remotive.com",
     "www.adzuna.com",
     "www.arbeitnow.com",
     "www.remotive.com",
-    "www.ycombinator.com",
-    "ycombinator.com",
 }
 TRUSTED_COURSE_DOMAINS = {
+    "cloud.google.com",
+    "docs.docker.com",
+    "docs.github.com",
+    "docs.python.org",
+    "docs.pytorch.org",
+    "fastapi.tiangolo.com",
+    "kafka.apache.org",
+    "numpy.org",
+    "pandas.pydata.org",
+    "postgresql.org",
+    "scikit-learn.org",
+    "skillbuilder.aws",
+    "spark.apache.org",
+    "www.postgresql.org",
+    "tensorflow.org",
+    "www.tensorflow.org",
     "airflow.apache.org",
-    "coursera.org",
     "databricks.com",
     "deeplearning.ai",
     "docs.getdbt.com",
@@ -30,11 +43,31 @@ TRUSTED_COURSE_DOMAINS = {
     "edx.org",
     "example.com",
     "freecodecamp.org",
+    "github.com",
     "kaggle.com",
     "learn.microsoft.com",
     "ocw.mit.edu",
     "youtube.com",
     "www.youtube.com",
+    "developer.mozilla.org",
+    "developer.hashicorp.com",
+    "dotnet.microsoft.com",
+    "huggingface.co",
+    "kubernetes.io",
+    "learn.mongodb.com",
+    "mlflow.org",
+    "netacad.com",
+    "nextjs.org",
+    "nodejs.org",
+    "opencv.org",
+    "oracle.com",
+    "owasp.org",
+    "playwright.dev",
+    "react.dev",
+    "redhat.com",
+    "servicenow.com",
+    "spring.io",
+    "typescriptlang.org",
 }
 
 
@@ -48,6 +81,7 @@ def summarize_quality(
         _missing_required(courses_df, "courses", ["external_id", "title", "platform", "url"]),
         _duplicates(jobs_df, "jobs", ["source_name", "external_id"]),
         _duplicates(courses_df, "courses", ["source_name", "external_id"]),
+        _duplicate_urls(courses_df, "courses"),
         _salary_anomalies(jobs_df),
         _empty_skills(jobs_df, "jobs"),
         _empty_skills(courses_df, "courses"),
@@ -97,6 +131,32 @@ def _duplicates(df: pd.DataFrame, dataset: str, columns: list[str]) -> dict[str,
     )
 
 
+
+
+def _duplicate_urls(df: pd.DataFrame, dataset: str) -> dict[str, object]:
+    if df.empty or "url" not in df:
+        return _result(dataset, "duplicate_urls", "warning", "medium", 0, 0, "No URL fields available.")
+
+    normalized = (
+        df["url"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .str.rstrip("/")
+    )
+    valid = normalized[normalized.ne("")]
+    duplicate_count = int(valid.duplicated(keep="first").sum())
+    status = "pass" if duplicate_count == 0 else "fail"
+    return _result(
+        dataset,
+        "duplicate_urls",
+        status,
+        "medium",
+        len(valid),
+        duplicate_count,
+        f"{duplicate_count} records reuse a URL already present in the dataset.",
+    )
 def _salary_anomalies(df: pd.DataFrame) -> dict[str, object]:
     if df.empty or not {"salary_min", "salary_max"}.issubset(df.columns):
         return _result("jobs", "salary_range_valid", "warning", "medium", 0, 0, "No salary fields available.")
@@ -143,14 +203,17 @@ def _trusted_url_domains(df: pd.DataFrame, dataset: str, trusted_domains: set[st
     if df.empty or "url" not in df:
         return _result(dataset, "trusted_source_domains", "warning", "medium", 0, 0, "No URL fields available.")
 
-    invalid_count = 0
+    invalid_domains: list[str] = []
     for url in df["url"].fillna(""):
         domain = urlparse(str(url)).netloc.lower()
         domain = domain[4:] if domain.startswith("www.") else domain
-        if domain not in trusted_domains:
-            invalid_count += 1
+        trusted = any(domain == allowed or domain.endswith(f".{allowed}") for allowed in trusted_domains)
+        if not trusted:
+            invalid_domains.append(domain or "(missing)")
 
+    invalid_count = len(invalid_domains)
     status = "pass" if invalid_count == 0 else "warning"
+    details = ", ".join(sorted(set(invalid_domains))) if invalid_domains else "none"
     return _result(
         dataset,
         "trusted_source_domains",
@@ -158,7 +221,7 @@ def _trusted_url_domains(df: pd.DataFrame, dataset: str, trusted_domains: set[st
         "medium",
         len(df),
         invalid_count,
-        f"{invalid_count} records use URLs outside trusted domains: {', '.join(sorted(trusted_domains))}.",
+        f"{invalid_count} records use URLs outside trusted domains: {details}.",
     )
 
 

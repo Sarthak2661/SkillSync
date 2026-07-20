@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 
+from src.ingestion.certification_sources import load_certification_catalog
+from src.domain.technology import technology_skill_role_families
+
 
 CERTIFICATION_RECOMMENDATIONS = [
     {
@@ -14,39 +17,6 @@ CERTIFICATION_RECOMMENDATIONS = [
         "target_roles": "Data Analyst | BI Analyst | Analytics Engineer",
         "url": "https://www.hackerrank.com/skills-verification/sql_basic",
         "priority_score": 82,
-    },
-    {
-        "skill": "Power BI",
-        "certification_name": "Microsoft PL-300 Power BI Data Analyst",
-        "provider": "Microsoft",
-        "level": "Intermediate",
-        "free_or_paid": "Paid",
-        "estimated_cost_usd": 165,
-        "target_roles": "Data Analyst | BI Developer | Reporting Analyst",
-        "url": "https://learn.microsoft.com/credentials/certifications/power-bi-data-analyst-associate/",
-        "priority_score": 88,
-    },
-    {
-        "skill": "Azure Data Factory",
-        "certification_name": "Microsoft DP-203 Azure Data Engineer",
-        "provider": "Microsoft",
-        "level": "Intermediate",
-        "free_or_paid": "Paid",
-        "estimated_cost_usd": 165,
-        "target_roles": "Azure Data Engineer | Cloud Data Engineer",
-        "url": "https://learn.microsoft.com/credentials/certifications/azure-data-engineer/",
-        "priority_score": 84,
-    },
-    {
-        "skill": "AWS",
-        "certification_name": "AWS Certified Data Engineer - Associate",
-        "provider": "AWS",
-        "level": "Intermediate",
-        "free_or_paid": "Paid",
-        "estimated_cost_usd": 150,
-        "target_roles": "Cloud Data Engineer | Data Platform Engineer",
-        "url": "https://aws.amazon.com/certification/certified-data-engineer-associate/",
-        "priority_score": 84,
     },
     {
         "skill": "Tableau",
@@ -82,28 +52,6 @@ CERTIFICATION_RECOMMENDATIONS = [
         "priority_score": 80,
     },
     {
-        "skill": "Python",
-        "certification_name": "freeCodeCamp Data Analysis with Python",
-        "provider": "freeCodeCamp",
-        "level": "Beginner",
-        "free_or_paid": "Free",
-        "estimated_cost_usd": 0,
-        "target_roles": "Data Analyst | Data Scientist | Data Engineer",
-        "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/",
-        "priority_score": 78,
-    },
-    {
-        "skill": "Machine Learning",
-        "certification_name": "Google Professional Machine Learning Engineer",
-        "provider": "Google Cloud",
-        "level": "Advanced",
-        "free_or_paid": "Paid",
-        "estimated_cost_usd": 200,
-        "target_roles": "ML Engineer | Data Scientist",
-        "url": "https://cloud.google.com/learn/certification/machine-learning-engineer",
-        "priority_score": 76,
-    },
-    {
         "skill": "Databricks",
         "certification_name": "Databricks Certified Data Engineer Associate",
         "provider": "Databricks",
@@ -118,7 +66,14 @@ CERTIFICATION_RECOMMENDATIONS = [
 
 
 def build_certification_recommendations(skill_gap_df: pd.DataFrame) -> pd.DataFrame:
-    certs = pd.DataFrame(CERTIFICATION_RECOMMENDATIONS)
+    certs = pd.DataFrame([*CERTIFICATION_RECOMMENDATIONS, *load_certification_catalog()])
+    certs["source_name"] = certs.get("source_name", "curated_certification_catalog").fillna(
+        "curated_certification_catalog"
+    )
+    certs["source_confidence"] = certs.get("source_confidence", "curated_demo").fillna("curated_demo")
+    certs["last_verified"] = certs.get("last_verified", "2026-07-20").fillna("2026-07-20")
+    certs["role_families"] = certs["skill"].map(_cert_role_families)
+    certs = certs.drop_duplicates(subset=["skill", "certification_name"], keep="last")
     if skill_gap_df.empty or "skill" not in skill_gap_df:
         return certs
 
@@ -131,3 +86,23 @@ def build_certification_recommendations(skill_gap_df: pd.DataFrame) -> pd.DataFr
         + (out["market_priority"] * 0.45)
     ).round().astype(int)
     return out.sort_values(["recommendation_score", "priority_score"], ascending=[False, False])
+
+
+def _cert_role_families(skill: object) -> str:
+    name = str(skill or "")
+    technology_families = technology_skill_role_families(name)
+    if technology_families:
+        return "|".join(technology_families)
+    legacy = {
+        "SQL": "Data & Analytics|Database",
+        "Python": "Data & Analytics|AI & Machine Learning|Software Engineering",
+        "Power BI": "Data & Analytics",
+        "Microsoft Fabric": "Data & Analytics|Cloud & Platform",
+        "Data Pipelines": "Data & Analytics|Cloud & Platform",
+        "Data Visualization": "Data & Analytics",
+        "Machine Learning": "AI & Machine Learning",
+        "AWS": "Cloud & Platform",
+        "Azure": "Cloud & Platform",
+        "GCP": "Cloud & Platform",
+    }
+    return legacy.get(name, "Other Technology")

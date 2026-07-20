@@ -1,0 +1,225 @@
+table fact_courses
+	lineageTag: 26d34095-b369-4e06-bc8c-184090c8de21
+
+	column run_id
+		dataType: string
+		lineageTag: e42c3bc4-95b3-4a23-98eb-7b8b06021cc4
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_key
+		dataType: string
+		lineageTag: d02eadb7-5253-4def-9030-cfe339f9568a
+		summarizeBy: none
+		sourceColumn: course_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: 81cd0885-37cc-4557-9a59-3abaaad56aff
+		summarizeBy: none
+		sourceColumn: source_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_confidence
+		dataType: string
+		lineageTag: e7ac8a8f-8764-4ae7-a78d-2d0b1dab664c
+		summarizeBy: none
+		sourceColumn: source_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column external_id
+		dataType: string
+		lineageTag: 41e7f8cb-ea24-42bf-a100-0c31613fc304
+		summarizeBy: none
+		sourceColumn: external_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column title
+		dataType: string
+		lineageTag: a105e8d5-6380-4698-b706-20d12335fe1e
+		summarizeBy: none
+		sourceColumn: title
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column platform
+		dataType: string
+		lineageTag: 8c3ee260-41e4-450c-9472-639717b0b72b
+		summarizeBy: none
+		sourceColumn: platform
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column level
+		dataType: string
+		lineageTag: 733de3f3-5f2c-4feb-a12e-11e4497d6f15
+		summarizeBy: none
+		sourceColumn: level
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column rating
+		dataType: double
+		lineageTag: 2e6090ce-f2d2-4e76-8b8f-571e82f1d1b7
+		summarizeBy: sum
+		sourceColumn: rating
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column duration_minutes
+		dataType: int64
+		formatString: 0
+		lineageTag: 73925844-187e-4fc7-95a0-b89a887941fa
+		summarizeBy: sum
+		sourceColumn: duration_minutes
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column subjects
+		dataType: string
+		lineageTag: 6a8c2c12-92ae-441d-aed5-cd74018f662a
+		summarizeBy: none
+		sourceColumn: subjects
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column roles
+		dataType: string
+		lineageTag: bbf74795-1b11-4d98-a863-6f4ce21cadd4
+		summarizeBy: none
+		sourceColumn: roles
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column products
+		dataType: string
+		lineageTag: ec831958-d93a-4f8f-ad4e-51141216510c
+		summarizeBy: none
+		sourceColumn: products
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_modified
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: aa5a3fc9-8c17-42bb-a277-f66cc1089ee4
+		summarizeBy: none
+		sourceColumn: last_modified
+
+		variation Variation
+			isDefault
+			relationship: be24e38b-a7dc-4a22-bd57-dbf98cf0b209
+			defaultHierarchy: LocalDateTable_43ea2555-7b42-493e-a1fa-8930ea0402fd.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column url
+		dataType: string
+		lineageTag: db3001db-e62d-49ee-bef4-ce66e33844ae
+		summarizeBy: none
+		sourceColumn: url
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_confidence
+		dataType: double
+		lineageTag: 8d628fbe-71e7-41a8-8d5f-11c0d78bbb60
+		summarizeBy: sum
+		sourceColumn: skill_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column skill_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 14912cc3-7a1f-4ea6-be10-8b5b5b3ac7dc
+		summarizeBy: sum
+		sourceColumn: skill_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column collected_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fa335cbd-9cff-4043-929c-4a4335cdf5ee
+		summarizeBy: none
+		sourceColumn: collected_at
+
+		variation Variation
+			isDefault
+			relationship: 5eb5acf7-89f2-4529-8e2e-5b55a07b541d
+			defaultHierarchy: LocalDateTable_f5e327e5-e061-458d-9954-d047dccfff3f.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_families
+		dataType: string
+		lineageTag: 5f1ed5a8-5189-45f4-9abc-f3f087cf7748
+		summarizeBy: none
+		sourceColumn: role_families
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_courses = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_courses.csv"),[Delimiter=",", Columns=19, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"run_id", type text}, {"course_key", type text}, {"source_name", type text}, {"source_confidence", type text}, {"external_id", type text}, {"title", type text}, {"platform", type text}, {"level", type text}, {"rating", type number}, {"duration_minutes", Int64.Type}, {"subjects", type text}, {"roles", type text}, {"products", type text}, {"last_modified", type date}, {"url", type text}, {"role_families", type text}, {"skill_confidence", type number}, {"skill_count", Int64.Type}, {"collected_at", type datetime}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

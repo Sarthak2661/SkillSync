@@ -1,0 +1,68 @@
+table mart_role_readiness_inputs
+	lineageTag: c9dee1ea-2501-4ef1-90a2-afd7c6affb15
+
+	column role_key
+		dataType: string
+		lineageTag: 151485b1-fa64-4cbe-a346-96e74890a0af
+		summarizeBy: none
+		sourceColumn: role_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 16cfa998-0e4b-4016-bcd7-66afa4ec85ba
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_demand
+		dataType: int64
+		formatString: 0
+		lineageTag: e775a370-93b3-4987-97bd-7e3717ac5889
+		summarizeBy: sum
+		sourceColumn: job_demand
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_supply
+		dataType: int64
+		formatString: 0
+		lineageTag: b35a6906-83fe-4a32-8c9c-d5224763bf35
+		summarizeBy: sum
+		sourceColumn: course_supply
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column readiness_gap
+		dataType: int64
+		formatString: 0
+		lineageTag: 23692394-a80c-4351-8db6-e3dbd2beb948
+		summarizeBy: sum
+		sourceColumn: readiness_gap
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_role_readiness_inputs = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\mart_role_readiness_inputs.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"role_key", type text}, {"skill_key", type text}, {"job_demand", Int64.Type}, {"course_supply", Int64.Type}, {"readiness_gap", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

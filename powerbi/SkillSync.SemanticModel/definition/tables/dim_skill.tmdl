@@ -1,0 +1,58 @@
+table dim_skill
+	lineageTag: 8bbab1e0-13dc-4f96-bd74-0e5cb69e349f
+
+	column skill_key
+		dataType: string
+		lineageTag: bb9b9204-e01f-444f-a3d7-860509f80349
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill
+		dataType: string
+		lineageTag: 15c6155b-b934-4f22-8e78-8e138cfc12ef
+		summarizeBy: none
+		sourceColumn: skill
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		lineageTag: afa01de5-17b8-40a3-8601-3cce3ff73192
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column taxonomy_source
+		dataType: string
+		lineageTag: b4462017-c033-45d0-be47-425cb63b48fc
+		summarizeBy: none
+		sourceColumn: taxonomy_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column onet_evidence_status
+		dataType: string
+		lineageTag: 17b04079-2f50-4f0f-bd6a-0f4273036229
+		summarizeBy: none
+		sourceColumn: onet_evidence_status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_skill = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\dim_skill.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"skill_key", type text}, {"skill", type text}, {"category", type text}, {"taxonomy_source", type text}, {"onet_evidence_status", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

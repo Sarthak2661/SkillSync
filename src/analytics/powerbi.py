@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.analytics.model import latest_run_id, load_latest_outputs, load_trend_history
-from src.etl.transform import infer_role_category
+from src.etl.transform import infer_role_category, infer_role_family
 
 
 POWERBI_TABLES = {
@@ -109,7 +109,7 @@ def _build_job_skill_mentions(jobs: pd.DataFrame, run_id: str) -> pd.DataFrame:
     rows = []
     for key, row in zip(_keys(jobs), jobs.to_dict(orient="records")):
         job_key = _hash(key)
-        role = infer_role_category(str(row.get("title") or ""))
+        role = str(row.get("role_category") or infer_role_category(str(row.get("title") or "")))
         for skill in _split(row.get("skills")):
             rows.append({
                 "job_skill_mention_key": _hash(f"{job_key}|{skill}"),
@@ -154,13 +154,13 @@ def _build_trend_fact(trends: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     df = trends.copy()
     df.insert(0, "skill_trend_key", df.apply(lambda row: _hash("|".join(str(row.get(c, "")) for c in
-              ["run_id", "source_name", "skill", "location", "role_category"])), axis=1))
+              ["run_id", "source_name", "skill", "location", "role_category", "role_family"])), axis=1))
     df.insert(1, "skill_key", df["skill"].astype(str).map(_hash))
     df.insert(2, "role_key", df["role_category"].astype(str).map(_hash))
     df.insert(3, "location_key", df["location"].astype(str).map(_hash))
     df.insert(4, "source_key", df["source_name"].astype(str).map(_hash))
     df.insert(5, "time_key", df["run_id"].astype(str).map(_hash))
-    return df.drop(columns=["skill", "role_category", "location", "source_name"], errors="ignore")
+    return df.drop(columns=["skill", "role_category", "role_family", "location", "source_name"], errors="ignore")
 
 
 def _build_dim_skill(gaps: pd.DataFrame, jobs: pd.DataFrame, courses: pd.DataFrame, trends: pd.DataFrame) -> pd.DataFrame:
@@ -183,9 +183,24 @@ def _build_dim_skill(gaps: pd.DataFrame, jobs: pd.DataFrame, courses: pd.DataFra
 
 
 def _build_dim_role(jobs: pd.DataFrame, trends: pd.DataFrame) -> pd.DataFrame:
-    roles = {infer_role_category(str(title)) for title in jobs.get("title", pd.Series(dtype=str)).fillna("")}
-    roles.update(trends.get("role_category", pd.Series(dtype=str)).dropna().astype(str))
-    return pd.DataFrame([{"role_key": _hash(role), "role_name": role} for role in sorted(roles)])
+    roles: dict[str, str] = {}
+    for row in jobs.to_dict(orient="records"):
+        title = str(row.get("title") or "")
+        role = str(row.get("role_category") or infer_role_category(title))
+        roles[role] = str(row.get("role_family") or infer_role_family(title))
+    for row in trends.to_dict(orient="records"):
+        role = str(row.get("role_category") or "Other Technology Role")
+        roles[role] = str(row.get("role_family") or infer_role_family(role))
+    return pd.DataFrame(
+        [
+            {
+                "role_key": _hash(role),
+                "role_name": role,
+                "role_family": family,
+            }
+            for role, family in sorted(roles.items())
+        ]
+    )
 
 
 def _build_dim_location(jobs: pd.DataFrame, trends: pd.DataFrame) -> pd.DataFrame:

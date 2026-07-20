@@ -9,26 +9,33 @@ Live data means the pipeline collected records from a public page or public API 
 | Source | Label | Notes |
 | --- | --- | --- |
 | Microsoft Learn Catalog | `live_verified` | Public Microsoft Learn catalog API. Good for learning-resource coverage, especially Microsoft/cloud topics. |
+| freeCodeCamp Curriculum | `live_verified` | Official GitHub curriculum index. Only known technology certification files are normalized. |
+| GitHub Learning Paths | `live_broad` | Official GitHub API results for maintained awesome lists and roadmaps. Community curation can still be uneven. |
+| Credential Engine Registry | `live_verified` | Optional CTDL credential search when an approved API key is configured. |
 | Adzuna Jobs API | `live_verified` | Official job API. Requires free API credentials and skips cleanly when credentials are missing. |
 | Arbeitnow Job API | `live_verified` | Public no-key JSON job API. |
 | Remotive Jobs API | `live_verified` | Public no-key remote-jobs JSON API. |
-| Y Combinator Jobs | `live_broad` | Optional legacy HTML scraper. Useful for comparison, but broad and more fragile than APIs. |
-| YouTube Learning | `fallback_learning` | Uses the YouTube Data API when an API key is configured. Without a key, the connector uses local fallback learning rows. |
+| HN Who's Hiring via Algolia | `live_broad` | Official no-key read API for user-authored posts in the latest monthly hiring thread. Only top-level technology-role posts are retained. |
+| YouTube Learning | `fallback_learning` | Uses the YouTube Data API when an API key is configured. Without a key, the connector uses local fallback learning rows. It is excluded from the Live sources only dashboard view because the same connector can return fallback data. |
 
 Live does not automatically mean perfect. Live sources can change HTML, include noisy roles, rate-limit requests, or return uneven coverage by skill.
 
 ## What Counts As Curated Data
 
-Curated data means the project uses local records that were intentionally shaped for repeatable analysis, screenshots, and data-role examples.
+Curated data means the project uses local records intentionally shaped for repeatable analysis, screenshots, and role examples.
 
 | Source | Label | Notes |
 | --- | --- | --- |
-| `data/sample/curated_data_jobs.csv` | `curated_demo` | Clean data-role postings with full descriptions for reliable portfolio demos. |
+| `data/sample/curated_data_jobs.csv` | `curated_demo` | Clean data-role examples retained for repeatable comparisons. |
+| `data/sample/curated_technology_jobs.csv` | `curated_demo` | Software, AI/ML, cloud, database, IT/security, and consulting examples with full descriptions. |
 | Startup Data Jobs | `curated_demo` | Small local feed for startup-style data roles. |
 | Enterprise Analytics Jobs | `curated_demo` | Small local feed for BI, cloud, governance, and analytics roles. |
 | Open Course Catalog | `curated_demo` | Maintained learning links from open/free learning resources. |
+| Official Learning Catalog | `curated_demo` | Verified official documentation and training links stored locally so the default run is broad but repeatable. |
 | Vendor Docs Catalog | `curated_demo` | Tool documentation and vendor training links. |
 | University Open Catalog | `curated_demo` | Open learning resources for statistics, ML, and visualization foundations. |
+| Cloud Certification Catalog | `curated_demo` | Manually reviewed AWS, Microsoft, and Google Cloud credential pages stored as local JSON. |
+| freeCodeCamp Certification Snapshot | `curated_demo` | Repeatable fallback used when live GitHub verification is not selected or unavailable. |
 
 Curated records are not a market sample by themselves. They are included so the project can run reliably after cloning and so the dashboard has clean examples for explanation.
 
@@ -38,7 +45,6 @@ Fake/test data is used for parser testing, smoke tests, and reliable local runs.
 
 | Source | Label | Notes |
 | --- | --- | --- |
-| RealPython Fake Jobs | `test_source` | Public fake job board used to test HTML parsing. It is not a real labor-market source. |
 | Seed Job Postings | `test_source` | Tiny local job sample used for fast offline pipeline checks. |
 | Seed Course Listings | `fallback_learning` | Tiny local learning-resource sample used when running smoke tests. |
 
@@ -50,7 +56,7 @@ These records are useful for engineering reliability, but they should not be pre
 | --- | --- |
 | `live_verified` | Live public source with a structured or reputable data endpoint. |
 | `live_broad` | Live public source with real listings, but broad coverage or noisy job categories. |
-| `curated_demo` | Local curated records designed for repeatable project demos and clear data-role examples. |
+| `curated_demo` | Local curated records designed for repeatable project demos and clear technology-role examples. |
 | `fallback_learning` | Learning records that may come from an API when configured, or fallback rows when no key is available. |
 | `test_source` | Fake, sample, or parser-test data that should not be treated as market evidence. |
 
@@ -66,6 +72,8 @@ Examples:
 - Indeed, Naukri, or other job boards without an approved API or export path.
 - Handshake pages behind login.
 - Paid course catalogs that do not expose a public API.
+- Coursera and Udemy catalog scraping, including paid third-party scraper services.
+- Khan Academy's deprecated public API.
 - Personal data such as recruiter names, emails, phone numbers, or applicant information.
 - Claims about exact labor-market size, national demand, or salary benchmarks.
 
@@ -73,7 +81,11 @@ For those sources, the safer path would be an official API, licensed dataset, ma
 
 ## How Skills Are Extracted
 
-Skill extraction is rule-based. The project scans job titles, job descriptions, course titles, subjects, roles, products, and platforms using maintained regex patterns in `src/etl/transform.py`.
+Skill extraction is rule-based. The project scans job titles, descriptions, course metadata, roles, products, and platforms using the taxonomy in `src/domain/technology.py` and the ETL rules in `src/etl/transform.py`.
+
+## Role Families
+
+Every job is assigned a standardized role and one of eight families: Data & Analytics, Software Engineering, AI & Machine Learning, Cloud & Platform, Database, IT & Security, Technology Consulting, or Other Technology. The same family labels flow into course coverage, certification recommendations, API filters, dbt models, and Power BI dimensions.
 
 This approach is simple and reproducible, but it has tradeoffs:
 
@@ -84,7 +96,7 @@ This approach is simple and reproducible, but it has tradeoffs:
 
 ## O*NET Skill And Wage Grounding
 
-SkillSync maps tracked skills to related O*NET-SOC occupations when there is a reasonable data-career match. Those mappings add official occupation codes, occupation titles, annual median wage references, growth outlook, projected openings, and O*NET URLs to the skill summary table.
+SkillSync maps tracked skills to related O*NET-SOC occupations when there is a defensible occupation match. Those mappings add official occupation codes, occupation titles, annual median wage references, growth outlook, projected openings, and O*NET URLs to the skill summary table.
 
 This does not mean O*NET has a perfect one-to-one record for every tool. O*NET describes occupations, not every library or vendor product. For example, Python can map cleanly to Data Scientists and Software Developers, while a tool such as dbt is mapped through related analytics and database occupations. When a skill does not have a confident mapping, the project falls back to the local market-signal table and labels it as a project fallback.
 ## How The Skill Opportunity Index Is Calculated
@@ -138,6 +150,16 @@ Avoid overclaiming:
 - Do not claim precise wage premium for a specific employer or city; O*NET is an occupational benchmark, not a live compensation offer.
 
 The dashboard includes source filters and quality checks so these caveats are visible instead of hidden.
+
+## Certification Recommendation Method
+
+Certification rows come from the maintained cloud catalog, freeCodeCamp curriculum records, and optionally Credential Engine. Each row keeps its source name, source-confidence label, and last verification date. The recommendation score combines the catalog's base priority with the current Skill Opportunity Index:
+
+```text
+recommendation_score = 0.55 * priority_score + 0.45 * opportunity_index
+```
+
+Credential Engine is queried only for a small relevant result set. Its Search API requires account approval and is not intended for bulk scraping. Certification prices marked as unavailable should be checked on the provider's page because Microsoft and other providers can vary pricing by region.
 
 ## O*NET and BLS reference data
 

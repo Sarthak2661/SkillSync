@@ -1,8 +1,22 @@
 # Power BI Star Schema
 
-Run python pipeline.py, then python export_powerbi.py. Import the CSV files from powerbi/export.
+Run `python pipeline.py`, then `python export_powerbi.py`. The report reads the CSV files in `powerbi/export`.
 
 Use the three facts, five dimensions, and three marts as the reporting model. fact_jobs and fact_courses remain available for drill-through detail.
+
+
+## Open the report
+
+Open `powerbi/SkillSync.pbip` in Power BI Desktop. The project includes the semantic model, relationships, DAX measures, theme, and five report pages in source-control-friendly files.
+
+The CSV folder is controlled by the `PowerBIExportPath` Power Query parameter. On a new machine:
+
+1. Open **Transform data -> Manage parameters**.
+2. Set `PowerBIExportPath` to the cloned repository's `powerbi/export` folder.
+3. Select **Home -> Refresh**.
+4. Save the project. Use **File -> Save a copy** if you also want a standalone `SkillSync.pbix`.
+
+The committed `.pbix` should come from Power BI Desktop; do not rename a ZIP or placeholder file to `.pbix`.
 
 ## Relationships
 
@@ -46,18 +60,33 @@ Do not create direct fact-to-fact relationships.
     VAR PreviousRun =
         MAXX(FILTER(ALL(dim_time), dim_time[run_timestamp] < CurrentRun), dim_time[run_timestamp])
     RETURN
-    COUNTROWS(
-        FILTER(
-            VALUES(dim_skill[skill_key]),
-            VAR CurrentDemand =
-                CALCULATE(SUM(fact_skill_trend_history[job_count]), dim_time[run_timestamp] = CurrentRun)
-            VAR PreviousDemand =
-                CALCULATE(SUM(fact_skill_trend_history[job_count]), dim_time[run_timestamp] = PreviousRun)
-            RETURN CurrentDemand > PreviousDemand
+    IF(
+        ISBLANK(PreviousRun),
+        0,
+        COALESCE(
+            COUNTROWS(
+                FILTER(
+                    VALUES(dim_skill[skill]),
+                    VAR CurrentDemand =
+                        CALCULATE(
+                            SUM(fact_skill_trend_history[job_count]),
+                            REMOVEFILTERS(dim_time),
+                            dim_time[run_timestamp] = CurrentRun
+                        )
+                    VAR PreviousDemand =
+                        CALCULATE(
+                            SUM(fact_skill_trend_history[job_count]),
+                            REMOVEFILTERS(dim_time),
+                            dim_time[run_timestamp] = PreviousRun
+                        )
+                    RETURN CurrentDemand > PreviousDemand
+                )
+            ),
+            0
         )
     )
 
-## Suggested pages
+## Report pages
 
 1. Market Overview: demand, supply, opportunity index, high-confidence demand, and rising skills.
 2. Role Demand: role-by-skill matrix from mart_role_skill_demand.

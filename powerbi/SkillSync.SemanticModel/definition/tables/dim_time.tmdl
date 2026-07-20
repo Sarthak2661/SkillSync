@@ -1,0 +1,97 @@
+table dim_time
+	lineageTag: 1c84c5d2-2050-4a47-b0dd-d15911e7b4da
+
+	column time_key
+		dataType: string
+		lineageTag: 6f58eb27-b6b6-4a74-91f0-ff80c99ee5cd
+		summarizeBy: none
+		sourceColumn: time_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 2cae2a66-b446-4b7e-bc31-7ffa2df3552b
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: bb151850-1e32-4807-9260-1cbb91aeb51e
+		summarizeBy: none
+		sourceColumn: run_timestamp
+
+		variation Variation
+			isDefault
+			relationship: 44421a4e-b79a-4864-9cbc-82c1b03a64ad
+			defaultHierarchy: LocalDateTable_f321bc47-1436-40de-a737-05f9c4a5dd55.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 361f971f-392d-444e-a2f5-c8a3604696b5
+		summarizeBy: sum
+		sourceColumn: year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: 67c1c510-983c-43bf-9538-fce63ec34aaa
+		summarizeBy: sum
+		sourceColumn: month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column week
+		dataType: int64
+		formatString: 0
+		lineageTag: f1b3b991-c063-47ad-9ade-c1f993307342
+		summarizeBy: sum
+		sourceColumn: week
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column day
+		dataType: int64
+		formatString: 0
+		lineageTag: 95e55465-6a95-425a-aa91-e0d9b5d4c283
+		summarizeBy: sum
+		sourceColumn: day
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_time = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\dim_time.csv"),[Delimiter=",", Columns=7, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"time_key", type text}, {"run_id", type text}, {"run_timestamp", type datetimezone}, {"year", Int64.Type}, {"month", Int64.Type}, {"week", Int64.Type}, {"day", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

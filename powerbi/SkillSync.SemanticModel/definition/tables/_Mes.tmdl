@@ -1,0 +1,181 @@
+table _Mes
+	lineageTag: 36e07bf0-679a-48ae-a6d5-4583dd28cfaa
+
+	measure 'Skill Demand Score' =
+			
+			VAR Mentions =
+			    SUM(fact_job_skill_mentions[mention_count])
+			VAR MaxMentions =
+			    MAXX(
+			        ALL(dim_skill),
+			        CALCULATE(
+			            SUM(fact_job_skill_mentions[mention_count])
+			        )
+			    )
+			RETURN
+			    ROUND(
+			        100 * DIVIDE(Mentions, MaxMentions, 0),
+			        0
+			    )
+		lineageTag: b9f0f3be-2a26-406e-bb54-e5e926d56656
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Skill Supply Score' =
+			
+			VAR Coverage =
+			    SUM(fact_course_skill_coverage[coverage_count])
+			VAR MaxCoverage =
+			    MAXX(
+			        ALL(dim_skill),
+			        CALCULATE(
+			            SUM(fact_course_skill_coverage[coverage_count])
+			        )
+			    )
+			RETURN
+			    ROUND(
+			        100 * DIVIDE(Coverage, MaxCoverage, 0),
+			        0
+			    )
+		lineageTag: 62e7d5f3-b2c3-45a6-aab8-796419c1e5d2
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Opportunity Index' =
+			
+			AVERAGE(mart_skill_opportunity[opportunity_index])
+		lineageTag: f6015e5e-4ae4-403b-9751-f1772e888aab
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'High-Confidence Demand Only' =
+			
+			CALCULATE(
+			    SUM(fact_job_skill_mentions[mention_count]),
+			    fact_job_skill_mentions[high_confidence_demand] = 1
+			)
+		formatString: 0
+		lineageTag: ab6c49d3-d71b-464a-a169-d624e000238d
+
+		changedProperty = IsHidden
+
+	measure 'Rising Skills Count' =
+			
+			VAR CurrentRun = MAX(dim_time[run_timestamp])
+			VAR PreviousRun =
+			    MAXX(
+			        FILTER(
+			            ALL(dim_time[run_timestamp]),
+			            dim_time[run_timestamp] < CurrentRun
+			        ),
+			        dim_time[run_timestamp]
+			    )
+			RETURN
+			    IF(
+			        ISBLANK(PreviousRun),
+			        0,
+			        COALESCE(
+			            COUNTROWS(
+			                FILTER(
+			                    VALUES(dim_skill[skill]),
+			                    VAR CurrentDemand =
+			                        CALCULATE(
+			                            SUM(fact_skill_trend_history[job_count]),
+			                            REMOVEFILTERS(dim_time),
+			                            dim_time[run_timestamp] = CurrentRun
+			                        )
+			                    VAR PreviousDemand =
+			                        CALCULATE(
+			                            SUM(fact_skill_trend_history[job_count]),
+			                            REMOVEFILTERS(dim_time),
+			                            dim_time[run_timestamp] = PreviousRun
+			                        )
+			                    RETURN CurrentDemand > PreviousDemand
+			                )
+			            ),
+			            0
+			        )
+			    )
+		lineageTag: 003b4d3f-b26b-4bcd-af77-2ed24ad2abd7
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Jobs' = DISTINCTCOUNT(fact_jobs[job_key])
+		formatString: 0
+		lineageTag: 86bde168-e5ed-412d-b417-a693ccf21f10
+
+	measure 'Total Courses' = DISTINCTCOUNT(fact_courses[course_key])
+		formatString: 0
+		lineageTag: 0e7c5e14-eafd-4bb4-a7f7-801dfb6cd9cd
+
+	measure 'Tracked Skills' = DISTINCTCOUNT(dim_skill[skill_key])
+		formatString: 0
+		lineageTag: 50b25de6-2ba4-439f-8dc3-3234fb1e6a64
+
+	measure 'Job Mentions' = SUM(fact_job_skill_mentions[mention_count])
+		formatString: 0
+		lineageTag: c1374aa6-0b40-4375-88b4-92b367a3663d
+
+	measure 'Course Coverage' = SUM(fact_course_skill_coverage[coverage_count])
+		formatString: 0
+		lineageTag: db15e53b-27ca-42f8-83df-8aec698bbba2
+
+	measure 'Role Demand' = SUM(mart_role_skill_demand[job_demand])
+		formatString: 0
+		lineageTag: f3c6474e-330d-4d41-821a-e2bf4d006fe9
+
+	measure 'Average Readiness Gap' = AVERAGE(mart_role_readiness_inputs[readiness_gap])
+		formatString: 0.0
+		lineageTag: 5c1b86d2-b768-4a20-b21f-f879179304bf
+
+	measure 'Trend Job Count' = SUM(fact_skill_trend_history[job_count])
+		formatString: 0
+		lineageTag: 15adb5e0-d07f-4107-8598-ea309a47fd1d
+
+	measure 'Trend Course Count' = SUM(fact_skill_trend_history[course_count])
+		formatString: 0
+		lineageTag: 194440b2-db28-441c-865a-fde665f39ee7
+
+	measure 'Quality Failures' = SUM(fact_quality_checks[failed_count])
+		formatString: 0
+		lineageTag: 83a20974-9d12-4a17-adf1-c6e50c860c43
+
+	measure 'Average Salary Maximum' = AVERAGE(fact_skill_trend_history[salary_max_avg])
+		formatString: $#,0
+		lineageTag: 0f10c6df-a192-4a8f-a7d6-f58dc1ad4ec3
+
+	column placeholder
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8c071133-1be8-4bfc-8d3e-11ef234bb019
+		summarizeBy: sum
+		sourceColumn: placeholder
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Mes = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [placeholder = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"placeholder", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	changedProperty = Name
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+

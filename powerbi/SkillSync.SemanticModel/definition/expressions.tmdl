@@ -1,0 +1,16 @@
+expression _Measures =
+		let
+		    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlSKjQUA", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+		    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", Int64.Type}}),
+		    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+		in
+		    #"Removed Columns"
+	lineageTag: 8e0685ef-d8ee-4eb6-b5e7-b4ebe141f984
+
+	annotation PBI_ResultType = Table
+
+expression PowerBIExportPath = "C:\Users\sarth\Documents\Python Projects\SkillSync\powerbi\export" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: c9028fc2-c94f-4868-a9c3-6b10d234a94a
+
+	annotation PBI_ResultType = Text
+

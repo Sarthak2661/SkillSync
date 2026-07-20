@@ -20,7 +20,6 @@ class Settings(BaseSettings):
     api_data_limit: int = 500
     load_to_postgres: bool = False
     job_source_mode: str = "seed"
-    job_source_url: str = "https://realpython.github.io/fake-jobs/"
     course_source_mode: str = "hybrid"
     course_source_url: str = "https://learn.microsoft.com/api/catalog/?type=modules&locale=en-us"
     course_source_limit: int = 200
@@ -34,7 +33,13 @@ class Settings(BaseSettings):
     github_repository_limit: int = 5
     github_cache_minutes: int = 15
     github_updated_within_days: int = 180
-    schedule_interval_minutes: int = 60
+    github_learning_path_limit: int = 10
+    github_learning_path_min_stars: int = 10
+    certification_source_mode: str = "curated"
+    credential_engine_api_key: str | None = None
+    credential_engine_api_url: str = "https://apps.credentialengine.org/assistant/search/ctdl"
+    credential_engine_source_limit: int = 25
+    schedule_interval_minutes: int = 1440
     scheduler_run_on_start: bool = True
 
 

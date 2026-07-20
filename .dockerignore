@@ -15,5 +15,8 @@ data/processed
 logs
 airflow/logs
 powerbi/export
+frontend/node_modules
+frontend/.next
+frontend/out
 .streamlit
 .streamlit_cache

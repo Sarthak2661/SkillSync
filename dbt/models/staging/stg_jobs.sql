@@ -7,6 +7,8 @@ select
     title,
     company,
     coalesce(nullif(location, ''), 'Unknown') as location,
+    coalesce(nullif(role_category, ''), 'Legacy Unclassified Role') as role_category,
+    coalesce(nullif(role_family, ''), 'Other Technology') as role_family,
     remote_type,
     salary_min,
     salary_max,

@@ -1,0 +1,229 @@
+table fact_certification_recommendations
+	lineageTag: a74702a7-4efa-4855-90ff-0c6070399315
+
+	column run_id
+		dataType: string
+		lineageTag: 6f68e9a5-a84e-422b-b538-133718951b73
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill
+		dataType: string
+		lineageTag: a07751d0-b801-42ac-9f9b-3f06a7d31371
+		summarizeBy: none
+		sourceColumn: skill
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column certification_name
+		dataType: string
+		lineageTag: d65e3605-969b-44a2-9e86-abfce3d01ff3
+		summarizeBy: none
+		sourceColumn: certification_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider
+		dataType: string
+		lineageTag: 12c55d3c-3518-43cf-b8ec-9e1cab9f3c5c
+		summarizeBy: none
+		sourceColumn: provider
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column level
+		dataType: string
+		lineageTag: ab436dda-3d53-4041-810d-ef34849c4f76
+		summarizeBy: none
+		sourceColumn: level
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column free_or_paid
+		dataType: string
+		lineageTag: fc33ee44-5ac7-4f6b-ac1e-01951afa0151
+		summarizeBy: none
+		sourceColumn: free_or_paid
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column estimated_cost_usd
+		dataType: int64
+		formatString: 0
+		lineageTag: 76d787b6-6ebe-40fe-a377-fc9be6ab93f1
+		summarizeBy: sum
+		sourceColumn: estimated_cost_usd
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_roles
+		dataType: string
+		lineageTag: b0daba59-3fce-44d2-9b47-368840b0b8fc
+		summarizeBy: none
+		sourceColumn: target_roles
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column url
+		dataType: string
+		lineageTag: 8e4f2543-97b4-4528-acd0-9a397838d073
+		summarizeBy: none
+		sourceColumn: url
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column priority_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 7cda208d-0b51-47bf-a7d9-fa9b0f735db9
+		summarizeBy: sum
+		sourceColumn: priority_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: 48355779-5697-4618-8777-48e6d158161e
+		summarizeBy: none
+		sourceColumn: source_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_confidence
+		dataType: string
+		lineageTag: 49f373b5-9e26-462d-9afd-be23f43fdf96
+		summarizeBy: none
+		sourceColumn: source_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_verified
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 952b2f5a-4625-4ddb-a24a-afdc78679a5a
+		summarizeBy: none
+		sourceColumn: last_verified
+
+		variation Variation
+			isDefault
+			relationship: 89d80bc0-10fc-4469-a176-733585b75cdf
+			defaultHierarchy: LocalDateTable_895a972f-f61c-4cc3-b2c3-4aaa3a3e5da5.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column opportunity_index
+		dataType: int64
+		formatString: 0
+		lineageTag: 1304f166-952e-4b4d-aebf-dd98533dc407
+		summarizeBy: sum
+		sourceColumn: opportunity_index
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column opportunity_label
+		dataType: string
+		lineageTag: 50a009bc-e305-4b33-8e58-c144362a1c19
+		summarizeBy: none
+		sourceColumn: opportunity_label
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_demand
+		dataType: int64
+		formatString: 0
+		lineageTag: 567f368e-dfd6-4810-a77e-1b63652dee69
+		summarizeBy: sum
+		sourceColumn: job_demand
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_job_roles
+		dataType: string
+		lineageTag: 9168baf4-8321-43bb-991c-3678df7a10ff
+		summarizeBy: none
+		sourceColumn: target_job_roles
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column market_priority
+		dataType: int64
+		formatString: 0
+		lineageTag: 83fa5d67-5e77-46a2-9628-a55aa66f08ec
+		summarizeBy: sum
+		sourceColumn: market_priority
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column recommendation_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 9610caa6-4c6d-44c7-bdab-8afa94df87a6
+		summarizeBy: sum
+		sourceColumn: recommendation_score
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_families
+		dataType: string
+		lineageTag: b74524e4-eed2-41c9-a0e9-a099849607ec
+		summarizeBy: none
+		sourceColumn: role_families
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_certification_recommendations = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_certification_recommendations.csv"),[Delimiter=",", Columns=20, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"run_id", type text}, {"skill", type text}, {"certification_name", type text}, {"provider", type text}, {"level", type text}, {"free_or_paid", type text}, {"estimated_cost_usd", Int64.Type}, {"target_roles", type text}, {"url", type text}, {"priority_score", Int64.Type}, {"source_name", type text}, {"source_confidence", type text}, {"last_verified", type date}, {"role_families", type text}, {"opportunity_index", Int64.Type}, {"opportunity_label", type text}, {"job_demand", Int64.Type}, {"target_job_roles", type text}, {"market_priority", Int64.Type}, {"recommendation_score", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

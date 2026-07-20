@@ -24,6 +24,10 @@ data/processed/
 !data/sample/**
 powerbi/export/
 
+# Power BI Desktop machine-local cache and security bindings
+powerbi/**/.pbi/
+powerbi/**/DAXQueries/
+
 # Streamlit cache
 .streamlit/
 .streamlit_cache/

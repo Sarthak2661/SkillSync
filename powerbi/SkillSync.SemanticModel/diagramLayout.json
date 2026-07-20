@@ -1,0 +1,229 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 0,
+            "y": 0
+          },
+          "nodeIndex": "dim_skill",
+          "nodeLineageTag": "8bbab1e0-13dc-4f96-bd74-0e5cb69e349f",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 404.36930566679376,
+            "y": 5.7403034456563162
+          },
+          "nodeIndex": "dim_role",
+          "nodeLineageTag": "16d96c05-74d0-4c72-9a35-95f818f73a20",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 736.67284586611731,
+            "y": 0
+          },
+          "nodeIndex": "dim_location",
+          "nodeLineageTag": "069fd037-a0e9-46ec-a12b-77f45bff08d0",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 1124.4789147792437,
+            "y": 1.5801011485521048
+          },
+          "nodeIndex": "dim_source",
+          "nodeLineageTag": "b6fdd611-84b2-45d2-a217-1ebde5774094",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 405.18324911469341
+          },
+          "nodeIndex": "fact_job_skill_mentions",
+          "nodeLineageTag": "5cdd9121-e551-4974-b123-48345e3b19de",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1031.411457199705,
+            "y": 378.81112634073162
+          },
+          "nodeIndex": "fact_skill_trend_history",
+          "nodeLineageTag": "4ebd0a96-ddc4-42cd-9d4c-83841b78a34b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 1480.5446802467138,
+            "y": 0
+          },
+          "nodeIndex": "dim_time",
+          "nodeLineageTag": "1c84c5d2-2050-4a47-b0dd-d15911e7b4da",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 881.462050384359
+          },
+          "nodeIndex": "mart_skill_opportunity",
+          "nodeLineageTag": "5990c434-b9cd-42b2-a96d-7cdfaa4b9349",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 445.87183438059634,
+            "y": 964.78751240617271
+          },
+          "nodeIndex": "mart_role_skill_demand",
+          "nodeLineageTag": "28e0d0b0-7634-4247-b6c2-43966b80a428",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 1023.770648011288,
+            "y": 1017.6104457141838
+          },
+          "nodeIndex": "mart_role_readiness_inputs",
+          "nodeLineageTag": "c9dee1ea-2501-4ef1-90a2-afd7c6affb15",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 10
+        },
+        {
+          "location": {
+            "x": 1836.6104457141837,
+            "y": 23.701517228281581
+          },
+          "nodeIndex": "fact_courses",
+          "nodeLineageTag": "26d34095-b369-4e06-bc8c-184090c8de21",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 11
+        },
+        {
+          "location": {
+            "x": 2106.1686250402458,
+            "y": 36.342326416698427
+          },
+          "nodeIndex": "fact_certification_recommendations",
+          "nodeLineageTag": "a74702a7-4efa-4855-90ff-0c6070399315",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 13
+        },
+        {
+          "location": {
+            "x": 1810.32882733735,
+            "y": 364.66273101090684
+          },
+          "nodeIndex": "fact_quality_checks",
+          "nodeLineageTag": "1f7abe11-4ce1-4136-9862-06156945ac75",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 12
+        },
+        {
+          "location": {
+            "x": 548.67790329372269,
+            "y": 379.59021600376263
+          },
+          "nodeIndex": "fact_course_skill_coverage",
+          "nodeLineageTag": "e24e187c-5c28-4c45-a41d-f7d3858d0356",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 15
+        },
+        {
+          "location": {
+            "x": 2106.5497376743187,
+            "y": 377.04384364498003
+          },
+          "nodeIndex": "fact_jobs",
+          "nodeLineageTag": "b7402ef8-578b-472b-a370-af136120e7b2",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 14
+        },
+        {
+          "location": {
+            "x": 2390.5497376743187,
+            "y": 556.80522285709185
+          },
+          "nodeIndex": "_Mes",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 56.4473930053778,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

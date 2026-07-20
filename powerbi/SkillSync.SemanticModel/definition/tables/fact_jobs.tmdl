@@ -1,0 +1,214 @@
+table fact_jobs
+	lineageTag: b7402ef8-578b-472b-a370-af136120e7b2
+
+	column run_id
+		dataType: string
+		lineageTag: b10efb36-1d52-439b-b163-588c223c267d
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_key
+		dataType: string
+		lineageTag: c9007880-0b0c-4a08-aa09-a3a0af1edc3c
+		summarizeBy: none
+		sourceColumn: job_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: 8ba44e75-4819-4a1e-ab7f-242197a1797d
+		summarizeBy: none
+		sourceColumn: source_name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_confidence
+		dataType: string
+		lineageTag: baccb05c-2703-4f32-838b-0181c213efa5
+		summarizeBy: none
+		sourceColumn: source_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column external_id
+		dataType: string
+		lineageTag: 111726f9-b349-45ee-8ffe-7fb500fc9dfd
+		summarizeBy: none
+		sourceColumn: external_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column title
+		dataType: string
+		lineageTag: 5c9b6005-c266-44fb-b54c-9799ed34c672
+		summarizeBy: none
+		sourceColumn: title
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column company
+		dataType: string
+		lineageTag: 6df27fcf-5a4b-419a-960c-4956ae6ad436
+		summarizeBy: none
+		sourceColumn: company
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column location
+		dataType: string
+		lineageTag: 271eae3c-aa20-4578-8d7e-c1798be93e42
+		summarizeBy: none
+		sourceColumn: location
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column remote_type
+		dataType: string
+		lineageTag: 99ccf9af-7155-460a-8e81-c5cd11e7e963
+		summarizeBy: none
+		sourceColumn: remote_type
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_min
+		dataType: int64
+		formatString: 0
+		lineageTag: f94127a7-3640-45b6-91cc-2dde5411bae7
+		summarizeBy: sum
+		sourceColumn: salary_min
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_max
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c51cc6c-9c5b-4a62-9345-75999f1220aa
+		summarizeBy: sum
+		sourceColumn: salary_max
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column posted_at
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 20b0bd75-184f-4b8d-a6aa-b8ab9573cbd3
+		summarizeBy: none
+		sourceColumn: posted_at
+
+		variation Variation
+			isDefault
+			relationship: 7d1128c8-fe66-446c-90a6-2943fa01cdb8
+			defaultHierarchy: LocalDateTable_761a5258-9aff-4463-aedc-a2e3ee10c31d.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column url
+		dataType: string
+		lineageTag: dbcfcf81-2750-42a6-8a57-ff88d4c16004
+		summarizeBy: none
+		sourceColumn: url
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_confidence
+		dataType: double
+		lineageTag: 0c406a87-176e-4e8e-b534-19e75621da25
+		summarizeBy: sum
+		sourceColumn: skill_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column skill_count
+		dataType: int64
+		formatString: 0
+		lineageTag: ae08dfec-9188-4258-82c4-894b0fae363e
+		summarizeBy: sum
+		sourceColumn: skill_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column collected_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: baeb8aed-d235-48e8-9936-b8849b8050c0
+		summarizeBy: none
+		sourceColumn: collected_at
+
+		variation Variation
+			isDefault
+			relationship: 3ecf7ed9-3465-44ac-8fc3-835bbdd5237c
+			defaultHierarchy: LocalDateTable_30604796-5bdf-4f76-ac66-a057edc1046a.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_category
+		dataType: string
+		lineageTag: 1dfd51cd-a7f9-4070-a527-b02774cf1c7d
+		summarizeBy: none
+		sourceColumn: role_category
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_family
+		dataType: string
+		lineageTag: 75c762d0-9403-44e1-a2e2-73af5f62d97e
+		summarizeBy: none
+		sourceColumn: role_family
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_jobs = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_jobs.csv"),[Delimiter=",", Columns=18, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"run_id", type text}, {"job_key", type text}, {"source_name", type text}, {"source_confidence", type text}, {"external_id", type text}, {"title", type text}, {"company", type text}, {"location", type text}, {"role_category", type text}, {"role_family", type text}, {"remote_type", type text}, {"salary_min", Int64.Type}, {"salary_max", Int64.Type}, {"posted_at", type date}, {"url", type text}, {"skill_confidence", type number}, {"skill_count", Int64.Type}, {"collected_at", type datetime}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

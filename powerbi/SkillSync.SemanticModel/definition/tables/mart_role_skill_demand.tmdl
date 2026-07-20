@@ -1,0 +1,78 @@
+table mart_role_skill_demand
+	lineageTag: 28e0d0b0-7634-4247-b6c2-43966b80a428
+
+	column role_key
+		dataType: string
+		lineageTag: de2079fb-6db9-4f14-8991-2cbbae6935b6
+		summarizeBy: none
+		sourceColumn: role_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 3daf7520-fc9b-4b36-8d50-d8aece4d0884
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_key
+		dataType: string
+		lineageTag: eca9a41c-ddd9-4a53-b0f1-7e243bd21ad1
+		summarizeBy: none
+		sourceColumn: time_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_demand
+		dataType: int64
+		formatString: 0
+		lineageTag: 79e83e66-d2ed-43d9-b0e2-9d289135209a
+		summarizeBy: sum
+		sourceColumn: job_demand
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_min_avg
+		dataType: int64
+		formatString: 0
+		lineageTag: b0d8e333-b91b-40dc-8b08-aa8a26adba0e
+		summarizeBy: sum
+		sourceColumn: salary_min_avg
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_max_avg
+		dataType: int64
+		formatString: 0
+		lineageTag: 69405ad4-b571-45d4-860f-b565095dc3f1
+		summarizeBy: sum
+		sourceColumn: salary_max_avg
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mart_role_skill_demand = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\mart_role_skill_demand.csv"),[Delimiter=",", Columns=6, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"role_key", type text}, {"skill_key", type text}, {"time_key", type text}, {"job_demand", Int64.Type}, {"salary_min_avg", Int64.Type}, {"salary_max_avg", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

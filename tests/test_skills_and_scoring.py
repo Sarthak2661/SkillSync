@@ -4,6 +4,7 @@ import pandas as pd
 
 from src.analytics.onet_reference import onet_profile_for_skill, onet_salary_score
 from src.etl.transform import build_skill_gap_summary, extract_skills, normalize_skill_text
+from src.domain.technology import classify_role
 
 class SkillExtractionTests(unittest.TestCase):
     def test_extracts_core_data_stack_skills(self):
@@ -34,6 +35,44 @@ class SkillExtractionTests(unittest.TestCase):
         normalized = normalize_skill_text("Power-BI / Azure_Data_Factory + SQL")
 
         self.assertEqual(normalized, "power bi azure data factory sql")
+    def test_extracts_broader_technology_stack_skills(self):
+        text = (
+            "Build Java and TypeScript services with React, Kubernetes, Terraform, MLflow, RAG, "
+            "Oracle Database, ITIL, and Playwright."
+        )
+
+        skills = extract_skills(text)
+
+        for expected in [
+            "Java",
+            "TypeScript",
+            "React",
+            "Kubernetes",
+            "Terraform",
+            "MLflow",
+            "RAG",
+            "Oracle Database",
+            "ITIL",
+            "Playwright",
+        ]:
+            self.assertIn(expected, skills)
+
+
+class RoleTaxonomyTests(unittest.TestCase):
+    def test_classifies_requested_technology_role_families(self):
+        cases = {
+            "Senior Backend Engineer": "Software Engineering",
+            "MLOps Engineer": "AI & Machine Learning",
+            "Cloud Platform Engineer": "Cloud & Platform",
+            "Oracle DBA": "Database",
+            "Cybersecurity Analyst": "IT & Security",
+            "AI Strategy Consultant": "Technology Consulting",
+            "Data Analyst": "Data & Analytics",
+        }
+
+        for title, expected_family in cases.items():
+            with self.subTest(title=title):
+                self.assertEqual(classify_role(title).role_family, expected_family)
 
 class ScoringTests(unittest.TestCase):
     def test_skill_gap_summary_scores_filtered_inputs(self):

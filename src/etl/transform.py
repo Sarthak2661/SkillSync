@@ -10,6 +10,13 @@ import pandas as pd
 from src.ingestion.base import RawRecord
 from src.analytics.onet_reference import onet_growth_score, onet_profile_for_skill, onet_salary_score
 from src.analytics.source_confidence import confidence_for_source
+from src.domain.technology import (
+    TECHNOLOGY_SKILLS,
+    classify_role,
+    technology_skill_role_families,
+    technology_skill_target_roles,
+)
+
 
 
 @dataclass(frozen=True)
@@ -82,6 +89,10 @@ SKILL_DEFINITIONS: tuple[SkillDefinition, ...] = (
     SkillDefinition("FastAPI", "Software Engineering", (r"\bfastapi\b",)),
     SkillDefinition("Data Quality", "Data Governance", (r"\bdata quality\b", r"\bvalidation checks?\b")),
     SkillDefinition("Responsible AI", "Data Governance", (r"\bresponsible ai\b", r"\bmodel governance\b")),
+    *(
+        SkillDefinition(definition.skill, definition.category, definition.patterns)
+        for definition in TECHNOLOGY_SKILLS
+    ),
 )
 
 
@@ -148,6 +159,15 @@ SKILL_MARKET_SIGNALS: dict[str, SkillMarketSignal] = {
 }
 
 
+for definition in TECHNOLOGY_SKILLS:
+    growth, salary, saturation, direction = definition.market_signal
+    SKILL_MARKET_SIGNALS[definition.skill] = SkillMarketSignal(
+        growth_score=growth,
+        salary_premium_score=salary,
+        saturation_score=saturation,
+        market_direction=direction,
+    )
+
 def extract_skills(text: str) -> list[str]:
     return [match.skill for match in extract_skill_matches(text)]
 
@@ -181,6 +201,8 @@ def extract_skill_matches(text: str) -> list[SkillMatch]:
 
 
 def normalize_skill_text(text: str) -> str:
+    text = re.sub(r"c\+\+", " cpp ", text, flags=re.IGNORECASE)
+    text = re.sub(r"c#", " csharp ", text, flags=re.IGNORECASE)
     text = text.replace("&", " and ")
     text = re.sub(r"[/_+-]", " ", text)
     text = re.sub(r"\s+", " ", text)
@@ -196,6 +218,7 @@ def normalize_job_postings(records: Iterable[RawRecord]) -> pd.DataFrame:
             ["title", "description", "company", "location", "remote_type"],
         )
         skill_matches = extract_skill_matches(text)
+        role = classify_role(str(item.get("title") or ""))
         rows.append(
             {
                 "source_name": record.source_name,
@@ -204,6 +227,8 @@ def normalize_job_postings(records: Iterable[RawRecord]) -> pd.DataFrame:
                 "title": item.get("title"),
                 "company": item.get("company"),
                 "location": item.get("location"),
+                "role_category": role.role_name,
+                "role_family": role.role_family,
                 "remote_type": item.get("remote_type"),
                 "salary_min": item.get("salary_min"),
                 "salary_max": item.get("salary_max"),
@@ -229,6 +254,13 @@ def normalize_course_listings(records: Iterable[RawRecord]) -> pd.DataFrame:
             ["title", "description", "subjects", "roles", "products", "platform"],
         )
         skill_matches = extract_skill_matches(text)
+        role_families = sorted(
+            {
+                family
+                for match in skill_matches
+                for family in _skill_role_families(match.skill)
+            }
+        )
         rows.append(
             {
                 "source_name": record.source_name,
@@ -245,6 +277,7 @@ def normalize_course_listings(records: Iterable[RawRecord]) -> pd.DataFrame:
                 "last_modified": item.get("last_modified"),
                 "url": item.get("url"),
                 "skills": "|".join(match.skill for match in skill_matches),
+                "role_families": "|".join(role_families),
                 "skill_categories": "|".join(sorted({match.category for match in skill_matches})),
                 "skill_match_terms": "|".join(_format_match_terms(skill_matches)),
                 "skill_confidence": skill_confidence(skill_matches),
@@ -315,6 +348,7 @@ def build_skill_gap_summary(jobs_df: pd.DataFrame, courses_df: pd.DataFrame) -> 
                 "taxonomy_source": onet_profile.taxonomy_source if onet_profile else "Project fallback taxonomy",
                 "onet_evidence_status": onet_profile.evidence_status if onet_profile else "project_fallback",
                 "onet_workplace_examples": " | ".join(onet_profile.onet_workplace_examples) if onet_profile else "",
+                "role_families": "|".join(_skill_role_families(skill)),
                 "onet_soc_codes": onet_profile.soc_codes if onet_profile else "",
                 "onet_occupations": onet_profile.occupation_titles if onet_profile else "",
                 "onet_wage_median_annual": onet_profile.median_wage_annual if onet_profile else None,
@@ -326,6 +360,41 @@ def build_skill_gap_summary(jobs_df: pd.DataFrame, courses_df: pd.DataFrame) -> 
                 "onet_reference_url": onet_profile.source_urls if onet_profile else "",
                 "status": _gap_status(gap_score),
             }
+        )
+
+    if not rows:
+        return pd.DataFrame(
+            columns=[
+                "skill",
+                "category",
+                "job_demand",
+                "course_supply",
+                "gap_score",
+                "demand_supply_ratio",
+                "demand_score",
+                "growth_score",
+                "salary_premium_score",
+                "course_supply_score",
+                "saturation_score",
+                "opportunity_index",
+                "opportunity_label",
+                "market_direction",
+                "target_job_roles",
+                "taxonomy_source",
+                "onet_evidence_status",
+                "onet_workplace_examples",
+                "role_families",
+                "onet_soc_codes",
+                "onet_occupations",
+                "onet_wage_median_annual",
+                "onet_growth_outlook",
+                "bls_growth_percent",
+                "bls_wage_year",
+                "bls_projection_period",
+                "onet_projected_openings",
+                "onet_reference_url",
+                "status",
+            ]
         )
 
     return pd.DataFrame(rows).sort_values(
@@ -347,6 +416,7 @@ def build_skill_trend_history(jobs_df: pd.DataFrame, courses_df: pd.DataFrame, r
         "salary_max_avg",
         "location",
         "role_category",
+        "role_family",
     ]
     if jobs_df.empty or "skills" not in jobs_df:
         return pd.DataFrame(columns=columns)
@@ -364,7 +434,8 @@ def build_skill_trend_history(jobs_df: pd.DataFrame, courses_df: pd.DataFrame, r
                     "source_name": job.get("source_name") or "unknown",
                     "skill": skill,
                     "location": job.get("location") or "Unknown",
-                    "role_category": infer_role_category(str(job.get("title") or "")),
+                    "role_category": job.get("role_category") or infer_role_category(str(job.get("title") or "")),
+                    "role_family": job.get("role_family") or infer_role_family(str(job.get("title") or "")),
                     "salary_min": job.get("salary_min"),
                     "salary_max": job.get("salary_max"),
                     "course_count": course_counts.get(skill, 0),
@@ -376,7 +447,10 @@ def build_skill_trend_history(jobs_df: pd.DataFrame, courses_df: pd.DataFrame, r
 
     exploded = pd.DataFrame(rows)
     grouped = (
-        exploded.groupby(["run_id", "run_timestamp", "source_name", "skill", "location", "role_category"], dropna=False)
+        exploded.groupby(
+            ["run_id", "run_timestamp", "source_name", "skill", "location", "role_category", "role_family"],
+            dropna=False,
+        )
         .agg(
             job_count=("skill", "size"),
             course_count=("course_count", "max"),
@@ -404,16 +478,11 @@ def _gap_status(gap_score: int) -> str:
 
 
 def infer_role_category(title: str) -> str:
-    normalized = title.lower()
-    if any(term in normalized for term in ["engineer", "etl", "pipeline", "warehouse"]):
-        return "Data Engineering"
-    if any(term in normalized for term in ["scientist", "machine learning", "ml ", "ai "]):
-        return "Data Science"
-    if any(term in normalized for term in ["analyst", "analytics", "business intelligence", "bi "]):
-        return "Data Analytics"
-    if any(term in normalized for term in ["architect", "platform"]):
-        return "Data Architecture"
-    return "Other Data Role"
+    return classify_role(title).role_name
+
+
+def infer_role_family(title: str) -> str:
+    return classify_role(title).role_family
 
 
 def _run_timestamp_from_id(run_id: str) -> str:
@@ -464,7 +533,36 @@ def _opportunity_label(opportunity_index: int) -> str:
     return "Lower priority"
 
 
+def _skill_role_families(skill: str) -> tuple[str, ...]:
+    technology_families = technology_skill_role_families(skill)
+    if technology_families:
+        return technology_families
+
+    category = next(
+        (definition.category for definition in SKILL_DEFINITIONS if definition.skill == skill),
+        "Other",
+    )
+    category_families = {
+        "Programming": ("Data & Analytics", "AI & Machine Learning", "Software Engineering"),
+        "Database": ("Database", "Data & Analytics"),
+        "Data Engineering": ("Data & Analytics", "Cloud & Platform"),
+        "Analytics Platform": ("Data & Analytics",),
+        "Cloud": ("Cloud & Platform", "Data & Analytics", "AI & Machine Learning"),
+        "BI & Visualization": ("Data & Analytics",),
+        "Machine Learning": ("AI & Machine Learning",),
+        "Python Data Stack": ("Data & Analytics", "AI & Machine Learning"),
+        "Analysis": ("Data & Analytics", "AI & Machine Learning"),
+        "Software Engineering": ("Software Engineering", "Cloud & Platform"),
+        "Data Governance": ("Data & Analytics", "Technology Consulting"),
+    }
+    return category_families.get(category, ("Other Technology",))
+
+
 def _target_job_roles(skill: str) -> str:
+    technology_roles = technology_skill_target_roles(skill)
+    if technology_roles:
+        return " | ".join(technology_roles)
+
     role_map = {
         "SQL": ["Data Analyst", "BI Analyst", "Analytics Engineer", "Data Engineer"],
         "Python": ["Data Analyst", "Data Scientist", "Data Engineer", "ML Engineer"],
@@ -491,7 +589,7 @@ def _target_job_roles(skill: str) -> str:
         "Docker": ["Data Engineer", "ML Engineer", "Data Platform Engineer"],
         "FastAPI": ["Data Engineer", "ML Platform Engineer", "Analytics API Developer"],
     }
-    return " | ".join(role_map.get(skill, ["Data Analyst", "Data Engineer", "Data Scientist"]))
+    return " | ".join(role_map.get(skill, ["Technology professional"]))
 
 
 def _salary_baseline(jobs_df: pd.DataFrame) -> float | None:

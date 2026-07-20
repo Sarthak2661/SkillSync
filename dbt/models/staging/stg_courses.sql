@@ -13,5 +13,6 @@ select
     skills,
     skill_confidence,
     skill_count,
+    role_families,
     collected_at
 from {{ source('market_intel', 'course_listings') }}

@@ -13,12 +13,17 @@ models:
           - accepted_values:
               values: [software_skill_verified, occupation_mapping_only, project_fallback]
   - name: dim_role
-    description: Conformed data-role category dimension.
+    description: Conformed technology-role category and family dimension.
     columns:
       - name: role_key
         tests: [not_null, unique]
       - name: role_name
         tests: [not_null, unique]
+      - name: role_family
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Data & Analytics', 'Software Engineering', 'AI & Machine Learning', 'Cloud & Platform', 'Database', 'IT & Security', 'Technology Consulting', 'Other Technology']
   - name: dim_location
     description: Conformed job-market location dimension.
     columns:

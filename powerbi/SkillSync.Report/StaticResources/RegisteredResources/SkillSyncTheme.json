@@ -1,0 +1,19 @@
+{
+  "name": "SkillSync Warm",
+  "dataColors": [
+    "#1F8A70",
+    "#D85D3F",
+    "#C28A19",
+    "#4F6D63",
+    "#875C74",
+    "#2878A0",
+    "#6A8E3A",
+    "#AA6B39"
+  ],
+  "background": "#F7F3EA",
+  "foreground": "#17382F",
+  "tableAccent": "#D85D3F",
+  "good": "#1F8A70",
+  "neutral": "#C28A19",
+  "bad": "#B54A3A"
+}

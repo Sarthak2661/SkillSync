@@ -3,74 +3,61 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from src.ingestion.course_sources import CompositeCourseSource, YouTubeLearningSource
+from src.ingestion.course_sources import CompositeCourseSource, OfficialLearningCatalogSource, YouTubeLearningSource
+from src.ingestion.curated_job_source import CuratedTechnologyJobsSource
 from src.ingestion.job_sources import (
     AdzunaJobsSource,
     ArbeitnowJobsSource,
+    CompositeJobSource,
+    HackerNewsWhoIsHiringSource,
     RemotiveJobsSource,
-    parse_realpython_fake_jobs,
-    parse_ycombinator_jobs,
 )
 
-class ParserTests(unittest.TestCase):
+class IngestionSourceTests(unittest.TestCase):
     def test_composite_course_source_continues_after_network_failure(self):
         unavailable = Mock()
+        unavailable.source_name = "unavailable_courses"
+        unavailable.source_type = "course_listing"
         unavailable.fetch.side_effect = requests.RequestException("source unavailable")
         available = Mock()
+        available.source_name = "available_courses"
+        available.source_type = "course_listing"
         available.fetch.return_value = [Mock()]
 
-        records = CompositeCourseSource([unavailable, available]).fetch()
+        source = CompositeCourseSource([unavailable, available])
+        records = source.fetch()
 
         self.assertEqual(len(records), 1)
         available.fetch.assert_called_once_with()
+        self.assertEqual([status.status for status in source.fetch_statuses], ["failed", "success"])
+        self.assertEqual(source.fetch_statuses[0].error_type, "RequestException")
 
-    def test_parse_realpython_fake_jobs_card(self):
-        html = """
-        <div class="card-content">
-          <h2 class="title">Data Engineer</h2>
-          <h3 class="company">Example Analytics</h3>
-          <p class="location">Remote</p>
-          <time>2026-06-20</time>
-          <footer>
-            <a href="/apply">Apply</a>
-            <a href="/jobs/data-engineer">Details</a>
-          </footer>
-        </div>
-        """
+    def test_composite_job_source_records_empty_and_success_statuses(self):
+        empty = Mock()
+        empty.source_name = "empty_jobs"
+        empty.source_type = "job_posting"
+        empty.fetch.return_value = []
+        available = Mock()
+        available.source_name = "available_jobs"
+        available.source_type = "job_posting"
+        available.fetch.return_value = [Mock()]
 
-        jobs = parse_realpython_fake_jobs(html, "https://example.com")
+        source = CompositeJobSource([empty, available])
+        records = source.fetch()
 
-        self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0].title, "Data Engineer")
-        self.assertEqual(jobs[0].company, "Example Analytics")
-        self.assertEqual(jobs[0].location, "Remote")
-        self.assertEqual(jobs[0].url, "https://example.com/jobs/data-engineer")
-
-    def test_parse_ycombinator_jobs_card(self):
-        html = """
-        <ul>
-          <li>
-            <a href="/companies/acme/jobs/abc123-data-engineer">Data Engineer</a>
-            Acme AI (S24) &bull; Full-time &bull; $120K - $180K &bull; San Francisco / Remote
-          </li>
-        </ul>
-        """
-
-        jobs = parse_ycombinator_jobs(html, "https://www.ycombinator.com/jobs")
-
-        self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0].title, "Data Engineer")
-        self.assertEqual(jobs[0].company, "Acme AI")
-        self.assertEqual(jobs[0].salary_min, 120000)
-        self.assertEqual(jobs[0].salary_max, 180000)
-        self.assertEqual(
-            jobs[0].url,
-            "https://www.ycombinator.com/companies/acme/jobs/abc123-data-engineer",
-        )
-
-
+        self.assertEqual(len(records), 1)
+        self.assertEqual([status.status for status in source.fetch_statuses], ["empty", "success"])
+        self.assertEqual([status.record_count for status in source.fetch_statuses], [0, 1])
     def test_adzuna_without_credentials_skips_cleanly(self):
         self.assertEqual(AdzunaJobsSource().fetch(), [])
+    def test_curated_technology_source_has_broad_role_coverage(self):
+        records = CuratedTechnologyJobsSource().fetch()
+        titles = " ".join(str(record.payload.get("title") or "") for record in records)
+
+        self.assertGreaterEqual(len(records), 30)
+        for expected in ["Backend", "Machine Learning", "DevOps", "Database Administrator", "Security", "Consultant"]:
+            self.assertIn(expected, titles)
+
 
     @patch("src.ingestion.job_sources.requests.get")
     def test_arbeitnow_api_returns_job_records(self, mock_get):
@@ -124,6 +111,66 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(records[0].source_name, "remotive_jobs")
         self.assertEqual(records[0].payload["remote_type"], "Remote")
         self.assertIn("dbt", records[0].payload["description"])
+
+    @patch("src.ingestion.job_sources.requests.get")
+    def test_hackernews_api_keeps_top_level_technology_job_posts(self, mock_get):
+        story_response = Mock()
+        story_response.json.return_value = {
+            "hits": [{"objectID": "456", "title": "Ask HN: Who is hiring? (July 2026)"}]
+        }
+        story_response.raise_for_status.return_value = None
+
+        comments_response = Mock()
+        comments_response.json.return_value = {
+            "hits": [
+                {
+                    "objectID": "9001",
+                    "parent_id": 456,
+                    "author": "hiring_manager",
+                    "created_at": "2026-07-01T12:00:00Z",
+                    "comment_text": (
+                        "<p>Signal Works | Remote | $120K - $160K</p>"
+                        "<p>Hiring a Data Engineer to build Python, SQL, dbt, and Airflow pipelines.</p>"
+                    ),
+                },
+                {
+                    "objectID": "9002",
+                    "parent_id": 456,
+                    "author": "founder",
+                    "created_at": "2026-07-01T12:10:00Z",
+                    "comment_text": "<p>Hiring a product designer for our mobile app.</p>",
+                },
+                {
+                    "objectID": "9003",
+                    "parent_id": 9001,
+                    "author": "candidate",
+                    "created_at": "2026-07-01T12:20:00Z",
+                    "comment_text": "<p>Is the Data Engineer role available in Canada?</p>",
+                },
+            ]
+        }
+        comments_response.raise_for_status.return_value = None
+        mock_get.side_effect = [story_response, comments_response]
+
+        records = HackerNewsWhoIsHiringSource().fetch()
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].source_name, "hackernews_who_is_hiring")
+        self.assertEqual(records[0].payload["company"], "Signal Works")
+        self.assertEqual(records[0].payload["title"], "Data Engineer")
+        self.assertEqual(records[0].payload["remote_type"], "Remote")
+        self.assertEqual(records[0].payload["salary_min"], 120000)
+        self.assertEqual(records[0].payload["salary_max"], 160000)
+        self.assertEqual(records[0].payload["url"], "https://news.ycombinator.com/item?id=9001")
+        self.assertEqual(mock_get.call_args_list[0].kwargs["params"]["tags"], "story,author_whoishiring")
+        self.assertEqual(mock_get.call_args_list[1].kwargs["params"]["hitsPerPage"], 1000)
+
+    def test_official_learning_catalog_has_verified_breadth(self):
+        records = OfficialLearningCatalogSource().fetch()
+
+        self.assertGreaterEqual(len(records), 30)
+        self.assertEqual({record.source_name for record in records}, {"official_learning_catalog"})
+        self.assertTrue(all(record.payload["url"].startswith("https://") for record in records))
 
     def test_youtube_fallback_source_returns_learning_records(self):
         records = YouTubeLearningSource().fetch()

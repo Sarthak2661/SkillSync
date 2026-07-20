@@ -92,7 +92,7 @@ with DAG(
     default_args=DEFAULT_ARGS,
     description="Run the SkillSync job/course market intelligence pipeline.",
     start_date=datetime(2026, 1, 1),
-    schedule_interval="@hourly",
+    schedule_interval="@daily",
     catchup=False,
     tags=["skillsync", "etl", "portfolio"],
 ) as dag:

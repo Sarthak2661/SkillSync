@@ -1,0 +1,42 @@
+table dim_source
+	lineageTag: b6fdd611-84b2-45d2-a217-1ebde5774094
+
+	column source_key
+		dataType: string
+		lineageTag: 92e3dca6-cab7-4bfb-b4d7-d0a19b7a29c0
+		summarizeBy: none
+		sourceColumn: source_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_name
+		dataType: string
+		lineageTag: 74fe3c74-4f14-4957-ba6e-68fab127e482
+		summarizeBy: none
+		sourceColumn: source_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_confidence
+		dataType: string
+		lineageTag: cd525074-2f0c-4cba-986c-673e241b663b
+		summarizeBy: none
+		sourceColumn: source_confidence
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_source = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\dim_source.csv"),[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}}),
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"source_key", type text}, {"source_name", type text}, {"source_confidence", type text}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

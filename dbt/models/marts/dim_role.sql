@@ -1,16 +1,29 @@
 with roles as (
-    select role_category as role_name
+    select
+        case role_category
+            when 'Data Analytics' then 'Data Analyst'
+            when 'Data Architecture' then 'Data Engineer'
+            when 'Data Engineering' then 'Data Engineer'
+            when 'Data Science' then 'Data Scientist'
+            when 'Other Data Role' then 'Other Technology Role'
+            else role_category
+        end as role_name,
+        case
+            when nullif(role_family, '') is not null then role_family
+            when role_category in ('Data Analytics', 'Data Architecture', 'Data Engineering') then 'Data & Analytics'
+            when role_category = 'Data Science' then 'AI & Machine Learning'
+            else 'Other Technology'
+        end as role_family
     from {{ source('market_intel', 'skill_trend_history') }}
     union
-    select case
-        when lower(title) ~ '(engineer|etl|pipeline|warehouse)' then 'Data Engineering'
-        when lower(title) ~ '(scientist|machine learning|(^| )ml |(^| )ai )' then 'Data Science'
-        when lower(title) ~ '(analyst|analytics|business intelligence|(^| )bi )' then 'Data Analytics'
-        when lower(title) ~ '(architect|platform)' then 'Data Architecture'
-        else 'Other Data Role'
-    end as role_name
+    select
+        role_category as role_name,
+        role_family
     from {{ ref('stg_jobs') }}
 )
-select distinct md5(role_name) as role_key, role_name
+select distinct
+    md5(role_name) as role_key,
+    role_name,
+    role_family
 from roles
-where role_name is not null
+where role_name is not null and role_family is not null

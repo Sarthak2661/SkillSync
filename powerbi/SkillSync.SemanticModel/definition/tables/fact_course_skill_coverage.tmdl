@@ -1,0 +1,98 @@
+table fact_course_skill_coverage
+	lineageTag: e24e187c-5c28-4c45-a41d-f7d3858d0356
+
+	column course_skill_coverage_key
+		dataType: string
+		lineageTag: 0ea74bcd-da84-4e5c-8a2d-19fe653ccee9
+		summarizeBy: none
+		sourceColumn: course_skill_coverage_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 628152e7-fac5-4cce-84ce-37f323427a76
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_key
+		dataType: string
+		lineageTag: 923d19ec-f2e8-4df7-a9b2-c2b1be986c05
+		summarizeBy: none
+		sourceColumn: source_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_key
+		dataType: string
+		lineageTag: 56c575c8-2ab8-4955-ace4-9d0cc515a156
+		summarizeBy: none
+		sourceColumn: time_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 649d180f-0cb5-4bb3-a560-9d3c97a90bd3
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_key
+		dataType: string
+		lineageTag: 49944d3d-615d-4383-997f-ab7290d6c36c
+		summarizeBy: none
+		sourceColumn: course_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_confidence
+		dataType: double
+		lineageTag: 32f2b5c2-9b96-4920-b060-664a544a49d7
+		summarizeBy: sum
+		sourceColumn: skill_confidence
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column coverage_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 5070b17f-c6aa-439d-9973-46a3bc650387
+		summarizeBy: sum
+		sourceColumn: coverage_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_course_skill_coverage = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_course_skill_coverage.csv"),[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"course_skill_coverage_key", type text}, {"skill_key", type text}, {"source_key", type text}, {"time_key", type text}, {"run_id", type text}, {"course_key", type text}, {"skill_confidence", type number}, {"coverage_count", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

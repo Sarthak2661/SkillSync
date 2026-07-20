@@ -1,0 +1,149 @@
+table fact_skill_trend_history
+	lineageTag: 4ebd0a96-ddc4-42cd-9d4c-83841b78a34b
+
+	column skill_trend_key
+		dataType: string
+		lineageTag: 1e50ca78-2301-41fb-80cd-0d38423b2549
+		summarizeBy: none
+		sourceColumn: skill_trend_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column skill_key
+		dataType: string
+		lineageTag: 4b88dbfc-edac-4761-81b5-53d11eca6931
+		summarizeBy: none
+		sourceColumn: skill_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_key
+		dataType: string
+		lineageTag: f0a33fb5-c5f1-46e6-b81c-d5444e3f85a9
+		summarizeBy: none
+		sourceColumn: role_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column location_key
+		dataType: string
+		lineageTag: e920c808-590f-404e-b1b3-aa6b75985480
+		summarizeBy: none
+		sourceColumn: location_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_key
+		dataType: string
+		lineageTag: d6673bbc-1d2d-4d2d-9f65-927beef7f9bc
+		summarizeBy: none
+		sourceColumn: source_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_key
+		dataType: string
+		lineageTag: d3b7d015-203d-41b0-9a7b-ef6e596eb356
+		summarizeBy: none
+		sourceColumn: time_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 4d3d069f-c1ee-4a12-962f-52d9983b0c4a
+		summarizeBy: none
+		sourceColumn: run_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4399276a-e4c5-48b8-b367-a99816a7bac7
+		summarizeBy: none
+		sourceColumn: run_timestamp
+
+		variation Variation
+			isDefault
+			relationship: 2e8d14de-31f6-485b-a5e7-8a4b313b591e
+			defaultHierarchy: LocalDateTable_0ad3e36f-ddc4-4f42-8636-b9378afb02e0.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 317b8e3b-8e07-461f-9c0d-c52f5c9cd406
+		summarizeBy: sum
+		sourceColumn: job_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column course_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 081c44f0-9dcc-4c7d-9c9d-8ef9598e0c00
+		summarizeBy: sum
+		sourceColumn: course_count
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column salary_min_avg
+		dataType: double
+		lineageTag: e5e45cfd-706d-4092-aca9-d0b2e97e4f2e
+		summarizeBy: sum
+		sourceColumn: salary_min_avg
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column salary_max_avg
+		dataType: double
+		lineageTag: 7fb9b701-4903-43d1-912b-47a5730ea8fc
+		summarizeBy: sum
+		sourceColumn: salary_max_avg
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_skill_trend_history = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(PowerBIExportPath & "\fact_skill_trend_history.csv"),[Delimiter=",", Columns=12, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"skill_trend_key", type text}, {"skill_key", type text}, {"role_key", type text}, {"location_key", type text}, {"source_key", type text}, {"time_key", type text}, {"run_id", type text}, {"run_timestamp", type datetimezone}, {"job_count", Int64.Type}, {"course_count", Int64.Type}, {"salary_min_avg", type number}, {"salary_max_avg", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
